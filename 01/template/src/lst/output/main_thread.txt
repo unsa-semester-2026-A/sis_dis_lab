@@ -1,0 +1,18 @@
+$ java MainThread
+La cajera Cajera 1 COMIENZA A PROCESAR LA COMPRA DEL CLIENTE Cliente 1 EN EL TIEMPO: 0seg
+La cajera Cajera 2 COMIENZA A PROCESAR LA COMPRA DEL CLIENTE Cliente 2 EN EL TIEMPO: 0seg
+Procesado el producto 1 del cliente Cliente 2 ->Tiempo: 1seg
+Procesado el producto 1 del cliente Cliente 1 ->Tiempo: 2seg
+Procesado el producto 2 del cliente Cliente 1 ->Tiempo: 4seg
+Procesado el producto 2 del cliente Cliente 2 ->Tiempo: 4seg
+Procesado el producto 3 del cliente Cliente 1 ->Tiempo: 5seg
+Procesado el producto 3 del cliente Cliente 2 ->Tiempo: 9seg
+Procesado el producto 4 del cliente Cliente 1 ->Tiempo: 10seg
+Procesado el producto 4 del cliente Cliente 2 ->Tiempo: 10seg
+Procesado el producto 5 del cliente Cliente 2 ->Tiempo: 11seg
+La cajera Cajera 2 HA TERMINADO DE PROCESAR Cliente 2 EN EL TIEMPO: 11seg
+Procesado el producto 5 del cliente Cliente 1 ->Tiempo: 12seg
+Procesado el producto 6 del cliente Cliente 1 ->Tiempo: 15seg
+La cajera Cajera 1 HA TERMINADO DE PROCESAR Cliente 1 EN EL TIEMPO: 15seg
+
+Tiempo total de ejecucion: 15 segundos (reduccion del 42% vs secuencial)

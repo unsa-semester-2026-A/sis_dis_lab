@@ -1,0 +1,18 @@
+$ java Main
+La cajera Cajera 1 COMIENZA A PROCESAR LA COMPRA DEL CLIENTE Cliente 1 EN EL TIEMPO: 0seg
+Procesado el producto 1 ->Tiempo: 2seg
+Procesado el producto 2 ->Tiempo: 4seg
+Procesado el producto 3 ->Tiempo: 5seg
+Procesado el producto 4 ->Tiempo: 10seg
+Procesado el producto 5 ->Tiempo: 12seg
+Procesado el producto 6 ->Tiempo: 15seg
+La cajera Cajera 1 HA TERMINADO DE PROCESAR Cliente 1 EN EL TIEMPO: 15seg
+La cajera Cajera 2 COMIENZA A PROCESAR LA COMPRA DEL CLIENTE Cliente 2 EN EL TIEMPO: 15seg
+Procesado el producto 1 ->Tiempo: 16seg
+Procesado el producto 2 ->Tiempo: 19seg
+Procesado el producto 3 ->Tiempo: 24seg
+Procesado el producto 4 ->Tiempo: 25seg
+Procesado el producto 5 ->Tiempo: 26seg
+La cajera Cajera 2 HA TERMINADO DE PROCESAR Cliente 2 EN EL TIEMPO: 26seg
+
+Tiempo total de ejecucion: 26 segundos

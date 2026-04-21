@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(7z x *)",
+      "Bash(typst --version)",
+      "Bash(mkdir -p /home/alvaro9rqc/1_Pacha/1-unsa/7_S/dis/lab/01/template/src/lst/anexo1)",
+      "Bash(mkdir -p /home/alvaro9rqc/1_Pacha/1-unsa/7_S/dis/lab/01/template/src/lst/anexo2)",
+      "Bash(mkdir -p /home/alvaro9rqc/1_Pacha/1-unsa/7_S/dis/lab/01/template/src/lst/output)",
+      "Read(//tmp/anexo1/**)",
+      "Bash(java Main)",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(java MainThread)",
+      "Read(//tmp/anexo2_sync/**)",
+      "Bash(java Demo)",
+      "Read(//tmp/anexo2_nosync/**)",
+      "Bash(java DemoNoSync)",
+      "Bash(ls /tmp/anexo2_nosync/*.class)",
+      "Bash(mkdir -p /tmp/nosync)",
+      "Bash(cp /home/alvaro9rqc/1_Pacha/1-unsa/7_S/dis/lab/01/template/src/lst/anexo2/CubbyHoleNoSync.java /home/alvaro9rqc/1_Pacha/1-unsa/7_S/dis/lab/01/template/src/lst/anexo2/ProductorNoSync.java /home/alvaro9rqc/1_Pacha/1-unsa/7_S/dis/lab/01/template/src/lst/anexo2/ConsumidorNoSync.java /home/alvaro9rqc/1_Pacha/1-unsa/7_S/dis/lab/01/template/src/lst/anexo2/DemoNoSync.java /tmp/nosync/)",
+      "Read(//tmp/**)",
+      "Bash(javac *.java)",
+      "Bash(typst compile *)"
+    ]
+  }
+}

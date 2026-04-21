@@ -1,0 +1,24 @@
+$ java Demo
+Consumidor #1 obtiene: 0
+Productor #1 pone: 0
+Productor #1 pone: 1
+Consumidor #1 obtiene: 1
+Consumidor #1 obtiene: 2
+Productor #1 pone: 2
+Consumidor #1 obtiene: 3
+Productor #1 pone: 3
+Productor #1 pone: 4
+Consumidor #1 obtiene: 4
+Productor #1 pone: 5
+Consumidor #1 obtiene: 5
+Productor #1 pone: 6
+Consumidor #1 obtiene: 6
+Consumidor #1 obtiene: 7
+Productor #1 pone: 7
+Consumidor #1 obtiene: 8
+Productor #1 pone: 8
+Productor #1 pone: 9
+Consumidor #1 obtiene: 9
+
+RESULTADO: Cada valor del 0 al 9 fue producido y consumido exactamente una vez.
+           La sincronizacion via wait()/notifyAll() elimina las condiciones de carrera.

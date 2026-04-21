@@ -1,0 +1,25 @@
+$ java DemoNoSync
+Productor #1 pone: 0
+Consumidor #1 obtiene: 0
+Consumidor #1 obtiene: 0    <- mismo valor consumido multiples veces (race condition)
+Consumidor #1 obtiene: 0
+Consumidor #1 obtiene: 0
+Consumidor #1 obtiene: 0
+Consumidor #1 obtiene: 0
+Consumidor #1 obtiene: 0
+Consumidor #1 obtiene: 0
+Consumidor #1 obtiene: 0
+Consumidor #1 obtiene: 0
+Productor #1 pone: 1        <- valores producidos pero nunca consumidos
+Productor #1 pone: 2
+Productor #1 pone: 3
+Productor #1 pone: 4
+Productor #1 pone: 5
+Productor #1 pone: 6
+Productor #1 pone: 7
+Productor #1 pone: 8
+Productor #1 pone: 9
+
+PROBLEMA: El Consumidor leyo el valor 0 diez veces (no esperaba al Productor).
+          Los valores 1-9 se produjeron pero el Consumidor ya habia terminado.
+          Esto es una condicion de carrera (race condition).
