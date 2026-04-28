@@ -1,3 +1,4 @@
+package lab02;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -34,39 +35,46 @@ class ClockNode {
 public class BerkeleySimulation {
     public static void main(String[] args) throws Exception {
         List<ClockNode> nodes = List.of(
-            new ClockNode("M", 0.0),
-            new ClockNode("E1", 5.2),
-            new ClockNode("E2", -3.4),
-            new ClockNode("E3", 500.0)
+            new ClockNode("M(0)", 0.0),
+            new ClockNode("E(1)", 5.2),
+            new ClockNode("E(2)", -3.4),
+            new ClockNode("E(3)", 500.0)
         );
-
         runBerkeley(nodes, 10.0);
     }
 
-    static void runBerkeley(List<ClockNode> nodes, double threshold)throws Exception  {
-        double master = nodes.get(0).readTime();
-
+    static void runBerkeley(List<ClockNode> nodes, double thresholdSec) throws Exception {
+        System.out.println("Ejecutando la simulacion de Berkeley ---");
+        double masterTime = nodes.get(0).readTime();
         List<Double> diffs = new ArrayList<>();
-        List<Double> valid = new ArrayList<>();
+        List<Boolean> validNode = new ArrayList<>();
+        List<Double> validDiffs = new ArrayList<>();
 
-        // calcular diferencias
         for (int i = 0; i < nodes.size(); i++) {
-            double diff = (i == 0) ? 0 : nodes.get(i).readTime() - master;
+            ClockNode node = nodes.get(i);
+            double diff = (i == 0) ? 0.0 : (node.readTime() - masterTime);
             diffs.add(diff);
-
-            if (Math.abs(diff) <= threshold) {
-                valid.add(diff);
+            boolean isValid = Math.abs(diff) <= thresholdSec;
+            validNode.add(isValid);
+            if (isValid) {
+                validDiffs.add(diff);
             }
+            System.out.printf(Locale.US,
+                    "Nodo %s | diferencia al maestro=%+8.4f s%n",
+                    node.id(), diff);
         }
 
-        double avg = valid.stream().mapToDouble(d -> d).average().orElse(0);
+        double avg = validDiffs.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
+        System.out.printf(Locale.US, "Promedio valido=%+8.4f s%n", avg);
+        System.out.println("Aplicando offsets:");
 
-        // aplicar ajustes (pendiente mejorar lógica)
         for (int i = 0; i < nodes.size(); i++) {
-            if (Math.abs(diffs.get(i)) <= threshold) {
-                double offset = avg - diffs.get(i);
-                nodes.get(i).adjust(offset);
+            if (!validNode.get(i)) {
+                System.out.printf("Nodo %s | fuera de umbral, no se ajusta%n", nodes.get(i).id());
+                continue;
             }
+            double offset = avg - diffs.get(i);
+            nodes.get(i).adjust(offset);
         }
     }
 }

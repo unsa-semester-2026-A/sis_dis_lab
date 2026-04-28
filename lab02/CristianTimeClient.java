@@ -1,4 +1,3 @@
-package lab02;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.Socket;
@@ -19,9 +18,19 @@ public class CristianTimeClient {
         double serverTime;
 
         try (Socket socket = new Socket(host, port);
-             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
             serverTime = Double.parseDouble(in.readLine());
         }
-        //Aun falta...
+
+        double t1 = System.currentTimeMillis() / 1000.0;
+        double rtt = t1 - t0;
+        double synchronizedTime = serverTime + (rtt / 2.0);
+        double offset = synchronizedTime - t1;
+
+        System.out.println("Tiempo local T1        : " + FMT.format(Instant.ofEpochMilli((long) (t1 * 1000))));
+        System.out.println("Tiempo servidor Ts     : " + FMT.format(Instant.ofEpochMilli((long) (serverTime * 1000))));
+        System.out.printf("RTT calculado          : %.6f s%n", rtt);
+        System.out.println("Tiempo sincronizado    : " + FMT.format(Instant.ofEpochMilli((long) (synchronizedTime * 1000))));
+        System.out.printf("Offset aplicado        : %+,.6f s%n", offset);
     }
 }
