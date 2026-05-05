@@ -245,6 +245,131 @@ public class Server {
     // marca de tiempo
     String date;
 
-    // Insertar ClientThread
+    // Constructor
+    ClientThread(Socket socket) {
+
+      // un id unico
+      id = ++uniqueId;
+      this.socket = socket;
+
+      // crear ambos flujos de datos
+      System.out.println("Thread trying to create Object Input/Output Streams");
+
+      try {
+        sOutput = new ObjectOutputStream(socket.getOutputStream());
+        sInput = new ObjectInputStream(socket.getInputStream());
+
+        // leer el nombre de usuario
+        username = (String) sInput.readObject();
+        broadcast(notif + username + " has joined the chat room." + notif);
+
+      } catch (IOException e) {
+        display("Exception creating new Input/output Streams: " + e);
+        return;
+      } catch (ClassNotFoundException e) {
+      }
+
+      date = new Date().toString() + "\n";
+    }
+
+    public String getUsername() {
+      return username;
+    }
+
+    public void setUsername(String username) {
+      this.username = username;
+    }
+
+    // bucle infinito para leer y reenviar mensajes
+    public void run() {
+
+      // repetir hasta LOGOUT
+      boolean keepGoing = true;
+
+      while (keepGoing) {
+
+        // leer un String (que es un objeto)
+        try {
+          cm = (ChatMessage) sInput.readObject();
+        } catch (IOException e) {
+          display(username + " Exception reading Streams: " + e);
+          break;
+        } catch (ClassNotFoundException e2) {
+          break;
+        }
+
+        // obtener el mensaje del objeto ChatMessage recibido
+        String message = cm.getMessage();
+
+        // diferentes acciones segun el tipo de mensaje
+        switch (cm.getType()) {
+
+          case ChatMessage.MESSAGE:
+            boolean confirmation = broadcast(username + ": " + message);
+            if (confirmation == false) {
+              String msg = notif + "Sorry. No such user exists." + notif;
+              writeMsg(msg);
+            }
+            break;
+
+          case ChatMessage.LOGOUT:
+            display(username + " disconnected with a LOGOUT message.");
+            keepGoing = false;
+            break;
+
+          case ChatMessage.WHOISIN:
+            writeMsg("List of the users connected at " + sdf.format(new Date()) + "\n");
+
+            // enviar lista de clientes activos
+            for (int i = 0; i < al.size(); ++i) {
+              ClientThread ct = al.get(i);
+              writeMsg((i + 1) + ") " + ct.username + " since " + ct.date);
+            }
+            break;
+        }
+      }
+
+      // al salir del bucle, desconectar y eliminar de la lista de clientes
+      remove(id);
+      close();
+    }
+
+    // cerrar todo
+    private void close() {
+
+      try {
+        if (sOutput != null) sOutput.close();
+      } catch (Exception e) {}
+
+      try {
+        if (sInput != null) sInput.close();
+      } catch (Exception e) {}
+
+      try {
+        if (socket != null) socket.close();
+      } catch (Exception e) {}
+    }
+
+    // escribir un String en el flujo de salida del Cliente
+    private boolean writeMsg(String msg) {
+
+      // si el Cliente sigue conectado, enviarle el mensaje
+      if (!socket.isConnected()) {
+        close();
+        return false;
+      }
+
+      // escribir el mensaje en el flujo
+      try {
+        sOutput.writeObject(msg);
+      }
+
+      // si ocurre un error, no abortar, solo informar al usuario
+      catch (IOException e) {
+        display(notif + "Error sending message to " + username + notif);
+        display(e.toString());
+      }
+      return true;
+    }
   }
 }
