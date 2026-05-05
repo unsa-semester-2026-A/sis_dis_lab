@@ -244,5 +244,7 @@ public class Server {
 
     // marca de tiempo
     String date;
+
+    // Insertar ClientThread
   }
 }
