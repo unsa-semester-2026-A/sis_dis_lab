@@ -1,0 +1,24 @@
+services:
+  server:
+    build: .
+    ports:
+      - "50052:50052"
+    command: ./server_bin
+
+  client-console:
+    build: .
+    depends_on:
+      - server
+    environment:
+      - GRPC_SERVER_ADDR=server:50052
+    command: ./client_console_bin
+
+  client-web:
+    build: .
+    depends_on:
+      - server
+    environment:
+      - GRPC_SERVER_ADDR=server:50052
+    ports:
+      - "8080:8080" 
+    command: ./client_web_bin
