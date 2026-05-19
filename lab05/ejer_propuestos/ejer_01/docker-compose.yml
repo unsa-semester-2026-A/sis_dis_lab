@@ -1,0 +1,16 @@
+services:
+  server:
+    build: .
+    command: java rmi.Server
+    ports:
+      - "1099:1099"
+
+  client:
+    build: .
+    command: java rmi.Client
+    depends_on:
+      - server
+    env_file:
+        - .env
+    environment:
+      - SERVER_HOST:${SERVER_HOST}
