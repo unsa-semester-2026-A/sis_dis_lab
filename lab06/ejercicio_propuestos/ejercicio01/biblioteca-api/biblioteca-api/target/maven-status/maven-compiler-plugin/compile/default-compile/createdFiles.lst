@@ -1,0 +1,4 @@
+biblioteca_api/model/Libro.class
+biblioteca_api/BibliotecaApiApplication.class
+biblioteca_api/CorsConfig.class
+biblioteca_api/controller/LibroController.class
