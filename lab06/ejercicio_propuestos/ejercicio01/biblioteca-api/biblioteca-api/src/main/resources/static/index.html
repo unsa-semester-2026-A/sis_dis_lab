@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Biblioteca - API RESTful</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  body { 
+    font-family: 'Segoe UI', system-ui, sans-serif; 
+    background: #F5F3EF; /* Fresh page: Fondo general limpio y cálido */
+    color: #3e3330;      /* Variación oscura del tono bordeaux para mejor lectura */
+    font-size: 14px; 
+  }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+  header {
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 2rem; padding-bottom: 1.2rem;
+    border-bottom: 1px solid #C9A99A; /* Old paper para separar */
+  }
+  header .icon { font-size: 32px; }
+  header h1   { font-size: 22px; font-weight: 600; color: #5E2A2B; } /* Rich bordeaux */
+  header p    { font-size: 13px; color: #636380; margin-top: 2px; }  /* Blue gray */
+  
+  .tags { margin-left: auto; display: flex; gap: 6px; }
+  .tag { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 4px; }
+  
+  /* Métodos adaptados a la paleta */
+  .get    { background: rgba(99, 99, 128, 0.15); color: #636380; }
+  .post   { background: rgba(94, 42, 43, 0.1); color: #5E2A2B; }
+  .delete { background: #fce4ec; color: #c62828; }
+
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; margin-bottom: 1.2rem; }
+
+  /* TARJETAS ESTILO PAPEL ANTIGUO / HOJA SUAVE */
+  .card {
+    background: #ffffff; 
+    border: 1px solid rgba(201, 169, 154, 0.5); /* Bordes sutiles Old paper */
+    border-radius: 10px; 
+    padding: 1.2rem 1.4rem;
+    box-shadow: 0 4px 6px -1px rgba(94, 42, 43, 0.03);
+  }
+  .card h2 { font-size: 14px; font-weight: 600; margin-bottom: 1rem; color: #5E2A2B; } /* Rich bordeaux */
+
+  .field { margin-bottom: 10px; }
+  .field label { display: block; font-size: 12px; color: #636380; margin-bottom: 4px; font-weight: 500; } /* Blue gray */
+  
+  /* INPUTS */
+  .field input {
+    width: 100%; padding: 8px 10px; 
+    border: 1px solid #C9A99A; /* Old paper */
+    border-radius: 6px; font-size: 13px; 
+    background: #FAFAf9; 
+    color: #2b2220;
+    outline: none; transition: border-color .15s, box-shadow .15s;
+  }
+  .field input:focus { 
+    border-color: #5E2A2B; /* Rich bordeaux al hacer foco */
+    background: #fff; 
+    box-shadow: 0 0 0 2px rgba(94, 42, 43, 0.15);
+  }
+
+  .btn-row { display: flex; gap: 8px; margin-top: 12px; }
+  
+  /* BOTONES ACCIÓN */
+  button {
+    padding: 8px 16px; border-radius: 6px; 
+    border: 1px solid #C9A99A; /* Old paper */
+    font-size: 13px; cursor: pointer; 
+    background: #F5F3EF; color: #636380; /* Textos en Blue gray */
+    transition: background .15s, border-color .15s;
+  }
+  button:hover { background: #E8E5DF; border-color: #9c8073; }
+  
+  .btn-primary { 
+    background: #5E2A2B; color: #F5F3EF; border-color: #5E2A2B; /* Rich bordeaux */
+    font-weight: 500; 
+  }
+  .btn-primary:hover { background: #471f20; border-color: #471f20; }
+  
+  .btn-danger  { background: #fff; color: #c62828; border-color: #e57373; }
+  .btn-danger:hover  { background: #fce4ec; }
+
+  /* ALERTAS INFORMATIVAS */
+  .msg {
+    font-size: 12px; padding: 7px 10px; border-radius: 6px;
+    margin-top: 10px; display: none; font-weight: 500;
+  }
+  .msg.ok  { background: rgba(99, 99, 128, 0.1); color: #434361; border: 1px solid #636380; }
+  .msg.err { background: rgba(94, 42, 43, 0.1); color: #5E2A2B; border: 1px solid #5E2A2B; }
+
+  .search-row { display: flex; gap: 8px; }
+  .search-row input { flex: 1; }
+
+  /* VISTA DE RESULTADO DE BÚSQUEDA */
+  .result-card {
+    margin-top: 12px; padding: 10px 12px;
+    border: 1px solid #C9A99A; border-radius: 8px;
+    background: rgba(201, 169, 154, 0.15); display: none; /* Tono suave Old paper */
+  }
+  .result-card .title { font-weight: 600; font-size: 13px; margin-bottom: 3px; color: #5E2A2B; }
+  .result-card .sub   { font-size: 12px; color: #636380; }
+  .id-badge { display: inline-block; background: #636380; border-radius: 4px; padding: 1px 8px; font-size: 11px; color: #F5F3EF; margin-top: 6px; }
+
+  /* TABLAS DE CONTENIDO */
+  table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 13px; }
+  th {
+    text-align: left; padding: 8px 10px; font-size: 11px;
+    color: #636380; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.5px; border-bottom: 1px solid #C9A99A;
+  }
+  td { padding: 10px 10px; border-bottom: 1px solid rgba(201, 169, 154, 0.25); vertical-align: middle; color: #3e3330; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(201, 169, 154, 0.08); }
+  .tbl-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+  .tbl-header h2 { font-size: 14px; font-weight: 600; color: #5E2A2B; }
+  .count { font-size: 12px; color: #636380; }
+
+  /* CONSOLA DE LOGS (Mantiene su esencia oscura pero usa los acentos de la paleta) */
+  .log-section { margin-top: 1.5rem; border-top: 2px solid #C9A99A; padding-top: 1.5rem; }
+  .terminal {
+    background: #1A1817; /* Negro carbón cálido */
+    color: #F5F3EF;      /* Texto Fresh page */
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 12px;
+    padding: 1rem;
+    border-radius: 8px;
+    height: 200px;
+    overflow-y: auto;
+    line-height: 1.6;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.6);
+    border: 1px solid #3e3330;
+  }
+  .log-line { margin-bottom: 4px; display: block; border-bottom: 1px solid #292422; padding-bottom: 2px; }
+  .log-time { color: #C9A99A; margin-right: 10px; } /* Old paper para la hora */
+  
+  /* Métodos resaltados en la consola */
+  .m-get { color: #A4B275; font-weight: bold; }    /* Un verde oliva suave que combina con la paleta */
+  .m-post { color: #C9A99A; font-weight: bold; }   /* Old paper */
+  .m-delete { color: #E06C75; font-weight: bold; } /* Rojo sutil */
+  .m-info { color: #7CA5B8; font-weight: bold; }   /* Variación clara de Blue gray */
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="icon"></div>
+    <div>
+      <h1>Biblioteca</h1>
+      <p>Gestión de libros</p>
+    </div>
+
+  </header>
+
+  <div class="row">
+
+    <!-- REGISTRAR -->
+    <div class="card">
+      <h2>Registrar libro</h2>
+      <div class="field">
+        <label>Título</label>
+        <input id="f-nombre" placeholder="Ej: Clean Code" />
+      </div>
+      <div class="field">
+        <label>Autor</label>
+        <input id="f-autor" placeholder="Ej: Robert Martin" />
+      </div>
+      <div class="field">
+        <label>Año</label>
+        <input id="f-anio" type="number" placeholder="Ej: 2008" min="1000" max="2099" />
+      </div>
+      <div class="btn-row">
+        <button class="btn-primary" onclick="agregar()">Agregar libro</button>
+        <button onclick="limpiar()">Limpiar</button>
+      </div>
+      <div class="msg" id="msg-add"></div>
+    </div>
+
+    <!-- BUSCAR -->
+    <div class="card">
+      <h2>Buscar por ID</h2>
+      <div class="field">
+        <label>ID del libro</label>
+        <div class="search-row">
+          <input id="buscar-id" type="number" placeholder="Ingresa el ID" min="1" />
+          <button class="btn-primary" onclick="buscar()">Buscar</button>
+        </div>
+      </div>
+      <div class="result-card" id="resultado">
+        <div class="title" id="r-nombre"></div>
+        <div class="sub"><span id="r-autor"></span> · <span id="r-anio"></span></div>
+        <span class="id-badge" id="r-id"></span>
+      </div>
+      <div class="msg" id="msg-buscar"></div>
+    </div>
+
+  </div>
+
+  <!-- TABLA -->
+  <div class="card">
+    <div class="tbl-header">
+      <h2>Colección de libros <span class="count" id="conteo"></span></h2>
+      <button onclick="cargar()">↺ Actualizar</button>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:50px">ID</th>
+          <th>Título</th>
+          <th>Autor</th>
+          <th style="width:60px">Año</th>
+          <th style="width:90px">Acción</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div class="msg" id="msg-del"></div>
+  </div>
+
+  <!-- CONSOLA DE LOGS -->
+  <div class="card log-section">
+    <div class="tbl-header">
+      <h2>Consola de Actividad</h2>
+      <button onclick="document.getElementById('console-output').innerHTML=''">Limpiar Consola</button>
+    </div>
+    <div id="console-output" class="terminal"></div>
+  </div>
+
+</div>
+
+<script>
+  const BASE = 'http://localhost:8080';
+
+  function logEvent(method, message) {
+    const out = document.getElementById('console-output');
+    const now = new Date().toLocaleTimeString();
+    const line = document.createElement('div');
+    line.className = 'log-line';
+    
+    let cls = 'm-info';
+    if (method === 'GET') cls = 'm-get';
+    if (method === 'POST') cls = 'm-post';
+    if (method === 'DELETE') cls = 'm-delete';
+
+    line.innerHTML = `<span class="log-time">[${now}]</span><span class="${cls}">[${method}]</span> <span>${message}</span>`;
+    out.appendChild(line);
+    out.scrollTop = out.scrollHeight; // Auto-scroll al final
+  }
+
+  async function cargar() {
+    logEvent('GET', 'Solicitando colección de libros a ' + BASE + '/libros');
+    try {
+      const res = await fetch(BASE + '/libros');
+      const data = await res.json();
+      logEvent('GET', 'Servidor respondió con ' + data.length + ' libros.');
+      renderTabla(data);
+    } catch(e) {
+      logEvent('GET', 'Error de conexión al cargar la tabla.');
+      renderTabla([]);
+    }
+  }
+
+  function renderTabla(libros) {
+    document.getElementById('conteo').textContent = '(' + libros.length + ')';
+    const tb = document.getElementById('tbody');
+    if (!libros.length) {
+      tb.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#aaa;padding:2rem 0">No hay libros registrados</td></tr>';
+      return;
+    }
+    tb.innerHTML = libros.map(l => `
+      <tr>
+        <td><span style="background:#eee;border-radius:4px;padding:1px 8px;font-size:12px;color:#555">${l.id}</span></td>
+        <td style="font-weight:500">${l.nombre}</td>
+        <td style="color:#666">${l.autor}</td>
+        <td style="color:#888">${l.anio}</td>
+        <td><button class="btn-danger" onclick="eliminar(${l.id})">Eliminar</button></td>
+      </tr>`).join('');
+  }
+
+  function showMsg(id, txt, ok) {
+    const el = document.getElementById(id);
+    el.textContent = txt;
+    el.className = 'msg ' + (ok ? 'ok' : 'err');
+    el.style.display = 'block';
+    setTimeout(() => el.style.display = 'none', 3500);
+  }
+
+  async function agregar() {
+    const nombre = document.getElementById('f-nombre').value.trim();
+    const autor  = document.getElementById('f-autor').value.trim();
+    const anio   = parseInt(document.getElementById('f-anio').value);
+    
+    logEvent('POST', `Intentando registrar libro: "${nombre}" (${anio})`);
+
+    if (!nombre || !autor || isNaN(anio)) { 
+      logEvent('POST', 'Validación fallida: Campos incompletos.');
+      showMsg('msg-add', 'Completa todos los campos con valores válidos', false); 
+      return; 
+    }
+    
+    const nuevoLibro = { nombre, autor, anio };
+
+    try {
+      const res = await fetch(BASE + '/libros', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(nuevoLibro)
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        logEvent('POST', `Éxito: Libro "${data.nombre}" creado con ID ${data.id}`);
+        showMsg('msg-add', 'Libro "' + data.nombre + '" registrado con ID ' + data.id, true);
+        limpiar();
+        cargar();
+      } else {
+        logEvent('POST', `Error ${res.status}: El servidor rechazó la solicitud.`);
+        showMsg('msg-add', 'Error al registrar en el servidor', false);
+      }
+    } catch(e) {
+      logEvent('POST', 'Error fatal: No se pudo contactar con el backend.');
+      showMsg('msg-add', 'Error al conectar con el servidor', false);
+    }
+  }
+
+  function limpiar() {
+    ['f-nombre','f-autor','f-anio'].forEach(id => document.getElementById(id).value = '');
+  }
+
+  async function buscar() {
+    const id = document.getElementById('buscar-id').value;
+    if (!id) { showMsg('msg-buscar', 'Ingresa un ID', false); return; }
+    logEvent('GET', `Buscando libro con ID: ${id}`);
+    try {
+      const res = await fetch(BASE + '/libros/' + id);
+      
+      if (res.ok) {
+        const l = await res.json();
+        logEvent('GET', `Encontrado: "${l.nombre}" de ${l.autor}`);
+        document.getElementById('r-nombre').textContent = l.nombre;
+        document.getElementById('r-autor').textContent  = l.autor;
+        document.getElementById('r-anio').textContent   = l.anio;
+        document.getElementById('r-id').textContent     = 'ID: ' + l.id;
+        document.getElementById('resultado').style.display = 'block';
+        document.getElementById('msg-buscar').style.display = 'none';
+      } else if (res.status === 404) {
+        logEvent('GET', `No se encontró ningún libro con ID ${id}`);
+        document.getElementById('resultado').style.display = 'none';
+        showMsg('msg-buscar', 'No se encontró ningún libro con ese ID', false);
+      } else {
+        throw new Error('Error en el servidor');
+      }
+    } catch(e) {
+      logEvent('GET', `Error de conexión al buscar ID ${id}`);
+      showMsg('msg-buscar', 'Error al conectar con el servidor', false);
+    }
+  }
+
+  async function eliminar(id) {
+    if (!confirm('¿Eliminar el libro con ID ' + id + '?')) return;
+    logEvent('DELETE', `Solicitando eliminación de libro ID: ${id}`);
+    try {
+      await fetch(BASE + '/libros/' + id, { method: 'DELETE' });
+      logEvent('DELETE', `Libro ${id} eliminado satisfactoriamente.`);
+      showMsg('msg-del', 'Libro eliminado correctamente', true);
+      document.getElementById('resultado').style.display = 'none';
+      cargar();
+    } catch(e) {
+      logEvent('DELETE', `Error al intentar eliminar ID ${id}`);
+      showMsg('msg-del', 'Error al eliminar', false);
+    }
+  }
+
+  cargar();
+</script>
+</body>
+</html>
