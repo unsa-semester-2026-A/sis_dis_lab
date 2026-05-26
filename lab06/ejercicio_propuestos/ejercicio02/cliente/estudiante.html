@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estudiantes - API RESTful</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: #f5f5f0; color: #1a1a1a; font-size: 14px; }
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+  header {
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 2rem; padding-bottom: 1.2rem;
+    border-bottom: 1px solid #ddd;
+  }
+  header .icon { font-size: 32px; }
+  header h1   { font-size: 22px; font-weight: 600; }
+  header p    { font-size: 13px; color: #777; margin-top: 2px; }
+  .tags { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 4px; }
+  .get    { background: #e8f5e9; color: #2e7d32; }
+  .post   { background: #e3f2fd; color: #1565c0; }
+  .put    { background: #fff8e1; color: #f57f17; }
+  .delete { background: #fce4ec; color: #c62828; }
+
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; margin-bottom: 1.2rem; }
+
+  .card {
+    background: #fff; border: 1px solid #e0e0e0;
+    border-radius: 10px; padding: 1.2rem 1.4rem;
+  }
+  .card h2 { font-size: 14px; font-weight: 600; margin-bottom: 1rem; color: #333; }
+
+  .field { margin-bottom: 10px; }
+  .field label { display: block; font-size: 12px; color: #777; margin-bottom: 4px; font-weight: 500; }
+  .field input {
+    width: 100%; padding: 8px 10px; border: 1px solid #ddd;
+    border-radius: 6px; font-size: 13px; background: #fafafa;
+    outline: none; transition: border-color .15s;
+  }
+  .field input:focus { border-color: #4a90e2; background: #fff; }
+
+  .btn-row { display: flex; gap: 8px; margin-top: 12px; }
+  button {
+    padding: 8px 16px; border-radius: 6px; border: 1px solid #ccc;
+    font-size: 13px; cursor: pointer; background: #fff;
+    transition: background .15s;
+  }
+  button:hover { background: #f0f0f0; }
+  .btn-blue   { background: #4a90e2; color: #fff; border-color: #4a90e2; }
+  .btn-blue:hover   { background: #357abd; }
+  .btn-yellow { background: #fff; color: #e65100; border-color: #ffb74d; }
+  .btn-yellow:hover { background: #fff8e1; }
+  .btn-danger { background: #fff; color: #c62828; border-color: #e57373; font-size: 12px; padding: 5px 10px; }
+  .btn-danger:hover { background: #fce4ec; }
+  .btn-fill-yellow { background: #fff3e0; color: #e65100; border-color: #ffb74d; font-size: 12px; padding: 5px 10px; }
+  .btn-fill-yellow:hover { background: #ffe0b2; }
+
+  .msg {
+    font-size: 12px; padding: 7px 10px; border-radius: 6px;
+    margin-top: 10px; display: none;
+  }
+  .msg.ok  { background: #e8f5e9; color: #2e7d32; }
+  .msg.err { background: #fce4ec; color: #c62828; }
+
+  .tbl-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+  .tbl-top h2 { font-size: 14px; font-weight: 600; color: #333; }
+  .count { font-size: 12px; color: #888; font-weight: 400; }
+
+  table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 13px; }
+  th {
+    text-align: left; padding: 8px 10px; font-size: 11px;
+    color: #888; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.5px; border-bottom: 1px solid #eee;
+  }
+  td { padding: 10px 10px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #fafafa; }
+  .idx-badge { background: #eee; border-radius: 4px; padding: 1px 7px; font-size: 11px; color: #666; }
+
+  .hint { font-size: 11px; color: #bbb; margin-top: 6px; }
+
+  /* CONSOLA DE LOGS */
+  .log-section { margin-top: 2rem; border-top: 1px solid #ddd; padding-top: 1.5rem; }
+  .terminal {
+    background: #1e1e1e;
+    color: #f5f5f0;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 12px;
+    padding: 1rem;
+    border-radius: 8px;
+    height: 200px;
+    overflow-y: auto;
+    line-height: 1.6;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+  }
+  .log-line { margin-bottom: 4px; display: block; border-bottom: 1px solid #333; padding-bottom: 2px; }
+  .log-time { color: #888; margin-right: 10px; }
+  
+  /* Colores de métodos */
+  .m-get { color: #4caf50; font-weight: bold; }    /* Verde */
+  .m-post { color: #ffeb3b; font-weight: bold; }   /* Amarillo */
+  .m-put { color: #fb8c00; font-weight: bold; }    /* Naranja/Amarillo fuerte */
+  .m-delete { color: #f44336; font-weight: bold; } /* Rojo */
+  .m-info { color: #00bcd4; font-weight: bold; }   /* Cian */
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <h1>Estudiantes</h1>
+    </div>
+  </header>
+
+  <div class="row">
+
+    <!-- REGISTRAR -->
+    <div class="card">
+      <h2>Registrar estudiante</h2>
+      <div class="field"><label>Nombre</label><input id="f-nombre" placeholder="Ej: Ana" /></div>
+      <div class="field"><label>Apellido</label><input id="f-apellido" placeholder="Ej: Torres" /></div>
+      <div class="field"><label>Carrera</label><input id="f-carrera" placeholder="Ej: Ing. Sistemas" /></div>
+      <div class="field"><label>Código</label><input id="f-codigo" placeholder="Ej: 20230001" /></div>
+      <div class="btn-row">
+        <button class="btn-blue" onclick="agregar()">Registrar</button>
+        <button onclick="limpiarForm()">Limpiar</button>
+      </div>
+      <div class="msg" id="msg-add"></div>
+    </div>
+
+    <!-- ACTUALIZAR -->
+    <div class="card">
+      <h2>Actualizar estudiante</h2>
+      <div class="field">
+        <label>Índice (posición en la lista)</label>
+        <input id="u-idx" type="number" placeholder="Ej: 0" min="0" />
+        <div class="hint">* Haz clic en "Editar" en la tabla para autocompletar</div>
+      </div>
+      <div class="field"><label>Nombre</label><input id="u-nombre" placeholder="Nombre actualizado" /></div>
+      <div class="field"><label>Apellido</label><input id="u-apellido" placeholder="Apellido actualizado" /></div>
+      <div class="field"><label>Carrera</label><input id="u-carrera" placeholder="Carrera actualizada" /></div>
+      <div class="field"><label>Código</label><input id="u-codigo" placeholder="Código actualizado" /></div>
+      <div class="btn-row">
+        <button class="btn-yellow" onclick="actualizar()">Actualizar</button>
+        <button onclick="limpiarUpdate()">Limpiar</button>
+      </div>
+      <div class="msg" id="msg-upd"></div>
+    </div>
+
+  </div>
+
+  <!-- TABLA -->
+  <div class="card">
+    <div class="tbl-top">
+      <h2>Lista de estudiantes <span class="count" id="conteo"></span></h2>
+      <button onclick="cargar()">↺ Actualizar</button>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:46px">Idx</th>
+          <th style="width:110px">Nombre</th>
+          <th style="width:110px">Apellido</th>
+          <th>Carrera</th>
+          <th style="width:95px">Código</th>
+          <th style="width:130px">Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div class="msg" id="msg-del"></div>
+  </div>
+   <!-- CONSOLA DE ACTIVIDAD -->
+  <div class="card log-section">
+    <div class="tbl-top">
+      <h2>Consola de Actividad</h2>
+      <button onclick="document.getElementById('console-output').innerHTML=''">Limpiar Consola</button>
+    </div>
+    <div id="console-output" class="terminal"></div>
+  </div>
+  
+
+</div>
+
+<script>
+  const BASE = 'http://127.0.0.1:5000';
+  function logEvent(method, message) {
+    const out = document.getElementById('console-output');
+    const now = new Date().toLocaleTimeString();
+    const line = document.createElement('div');
+    line.className = 'log-line';
+    
+    let cls = 'm-info';
+    if (method === 'GET') cls = 'm-get';
+    if (method === 'POST') cls = 'm-post';
+    if (method === 'PUT') cls = 'm-put';
+    if (method === 'DELETE') cls = 'm-delete';
+
+    line.innerHTML = `<span class="log-time">[${now}]</span><span class="${cls}">[${method}]</span> <span>${message}</span>`;
+    out.appendChild(line);
+    out.scrollTop = out.scrollHeight;
+  }
+
+
+  async function cargar() {
+    logEvent('GET', 'Solicitando lista de estudiantes a ' + BASE + '/estudiantes');
+    try {
+      const res  = await fetch(BASE + '/estudiantes');
+      const data = await res.json();
+      logEvent('GET', `Servidor respondió con ${data.length} estudiantes.`);
+      renderTabla(data);
+    } catch(e) {
+      logEvent('GET', 'Error de conexión al cargar datos.');
+      renderTabla([]);
+    }
+  }
+
+  function renderTabla(lista) {
+    document.getElementById('conteo').textContent = '(' + lista.length + ')';
+    const tb = document.getElementById('tbody');
+    if (!lista.length) {
+      tb.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#aaa;padding:2rem 0">No hay estudiantes registrados</td></tr>';
+      return;
+    }
+    tb.innerHTML = lista.map((e, i) => `
+      <tr>
+        <td><span class="idx-badge">${i}</span></td>
+        <td style="font-weight:500">${e.nombre}</td>
+        <td>${e.apellido}</td>
+        <td style="color:#666">${e.carrera}</td>
+        <td style="color:#888;font-size:12px">${e.codigo}</td>
+        <td>
+          <button class="btn-fill-yellow" onclick="prefillUpdate(${i}, '${e.nombre}', '${e.apellido}', '${e.carrera}', '${e.codigo}')">Editar</button>
+          <button class="btn-danger" onclick="eliminar(${i})" style="margin-left:4px">Eliminar</button>
+        </td>
+      </tr>`).join('');
+  }
+
+  function showMsg(id, txt, ok) {
+    const el = document.getElementById(id);
+    el.textContent = txt;
+    el.className = 'msg ' + (ok ? 'ok' : 'err');
+    el.style.display = 'block';
+    setTimeout(() => el.style.display = 'none', 3500);
+  }
+
+  async function agregar() {
+    const nombre   = document.getElementById('f-nombre').value.trim();
+    const apellido = document.getElementById('f-apellido').value.trim();
+    const carrera  = document.getElementById('f-carrera').value.trim();
+    const codigo   = document.getElementById('f-codigo').value.trim();
+    if (!nombre || !apellido || !carrera || !codigo) {
+      logEvent('POST', 'Validación fallida: Campos incompletos');
+      showMsg('msg-add', 'Completa todos los campos', false); return;
+    }
+    logEvent('POST', `Intentando registrar a: ${nombre} ${apellido}`);
+    try {
+      const res = await fetch(BASE + '/estudiantes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre, apellido, carrera, codigo })
+      });
+      const data = await res.json();
+      if (data.ok) {
+        logEvent('POST', 'Éxito: Estudiante registrado correctamente');
+        showMsg('msg-add', 'Estudiante registrado correctamente', true);
+        limpiarForm();
+        cargar();
+      }
+    } catch(e) {
+      logEvent('POST', 'Error fatal: No se pudo contactar con el servidor');
+      showMsg('msg-add', 'Error al conectar con el servidor', false);
+    }
+  }
+
+  function limpiarForm() {
+    ['f-nombre','f-apellido','f-carrera','f-codigo'].forEach(id => document.getElementById(id).value = '');
+  }
+
+  function prefillUpdate(i, nombre, apellido, carrera, codigo) {
+    document.getElementById('u-idx').value     = i;
+    document.getElementById('u-nombre').value  = nombre;
+    document.getElementById('u-apellido').value= apellido;
+    document.getElementById('u-carrera').value = carrera;
+    document.getElementById('u-codigo').value  = codigo;
+    document.getElementById('u-nombre').focus();
+  }
+
+  async function actualizar() {
+    const i        = parseInt(document.getElementById('u-idx').value);
+    const nombre   = document.getElementById('u-nombre').value.trim();
+    const apellido = document.getElementById('u-apellido').value.trim();
+    const carrera  = document.getElementById('u-carrera').value.trim();
+    const codigo   = document.getElementById('u-codigo').value.trim();
+    if (isNaN(i)) { showMsg('msg-upd', 'Ingresa un índice válido', false); return; }
+    if (!nombre || !apellido || !carrera || !codigo) { 
+      logEvent('PUT', 'Validación fallida: Campos incompletos para actualizar');
+      showMsg('msg-upd', 'Completa todos los campos', false); return;
+    }
+
+    logEvent('PUT', `Actualizando estudiante en índice ${i}: ${nombre}`);
+    try {
+      const res = await fetch(BASE + '/estudiantes/' + i, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre, apellido, carrera, codigo })
+      });
+      const data = await res.json();
+      if (data.actualizado) {
+        logEvent('PUT', `Éxito: Índice ${i} actualizado correctamente`);
+        showMsg('msg-upd', 'Estudiante actualizado correctamente', true);
+        limpiarUpdate();
+        cargar();
+      } else {
+        logEvent('PUT', `Error: ${data.error || 'No se pudo actualizar'}`);
+        showMsg('msg-upd', data.error || 'Error al actualizar', false);
+      }
+    } catch(e) {
+      logEvent('PUT', 'Error fatal: No se pudo contactar con el servidor');
+      showMsg('msg-upd', 'Error al conectar con el servidor', false);
+    }
+  }
+
+  function limpiarUpdate() {
+    ['u-idx','u-nombre','u-apellido','u-carrera','u-codigo'].forEach(id => document.getElementById(id).value = '');
+  }
+
+  async function eliminar(i) {
+    if (!confirm('¿Eliminar al estudiante en la posición ' + i + '?')) return;
+    logEvent('DELETE', `Solicitando eliminación de estudiante en índice: ${i}`);
+    try {
+      const res  = await fetch(BASE + '/estudiantes/' + i, { method: 'DELETE' });
+      const data = await res.json();
+      logEvent('DELETE', `Éxito: Estudiante "${data.nombre || ''}" eliminado`);
+      showMsg('msg-del', 'Estudiante "' + (data.nombre || '') + '" eliminado correctamente', true);
+      cargar();
+    } catch(e) {
+      logEvent('DELETE', 'Error al intentar eliminar');
+      showMsg('msg-del', 'Error al conectar con el servidor', false);
+    }
+  }
+
+  cargar();
+</script>
+</body>
+</html>
