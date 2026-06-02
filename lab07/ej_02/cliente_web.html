@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Cliente SOAP Web con Proxy CORS</title>
+    <!-- Se utiliza una tipografia moderna desde Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <style>
+        /* Estilos premium de diseño: Dark mode y Glassmorphism */
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: rgba(20, 26, 45, 0.6);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --accent-primary: #3b82f6;
+            --accent-secondary: #10b981;
+            --accent-error: #ef4444;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1000px;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-align: center;
+            background: linear-gradient(135deg, #60a5fa, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 2rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+            color: #60a5fa;
+        }
+
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        input, select {
+            width: 100%;
+            padding: 0.8rem;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 1rem;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        button {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--accent-primary), #2563eb);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        pre {
+            background: #080c14;
+            padding: 1.2rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: #a7f3d0;
+            max-height: 250px;
+        }
+
+        .console-error {
+            color: #fca5a5;
+        }
+
+        .limits-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .limits-list li {
+            position: relative;
+            padding-left: 1.5rem;
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .limits-list li::before {
+            content: "✦";
+            position: absolute;
+            left: 0;
+            color: var(--accent-secondary);
+            font-weight: bold;
+        }
+
+        .info-tag {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Cliente SOAP Web con Proxy CORS</h1>
+        
+        <div class="grid">
+            <!-- Columna Izquierda: Formulario e Interaccion -->
+            <div class="card">
+                <div class="card-title">Ejecutar Peticion SOAP</div>
+                
+                <div class="form-group">
+                    <label for="endpoint">API Proxy (URL):</label>
+                    <input type="text" id="endpoint" value="http://localhost:8090/api/calculadora" placeholder="http://localhost:8090/api/calculadora">
+                </div>
+                
+                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div>
+                        <label for="num1">Operando A:</label>
+                        <input type="number" id="num1" value="10">
+                    </div>
+                    <div>
+                        <label for="num2">Operando B:</label>
+                        <input type="number" id="num2" value="20">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="operacion">Operacion:</label>
+                    <select id="operacion" onchange="actualizarPayload()">
+                        <option value="Add">Sumar (Add)</option>
+                        <option value="Subtract">Restar (Subtract)</option>
+                        <option value="Multiply">Multiplicar (Multiply)</option>
+                        <option value="Divide">Dividir (Divide)</option>
+                        <option value="Modulo">Módulo (Modulo)</option>
+                    </select>
+                </div>
+
+                <button onclick="enviarPeticionSOAP()">Calcular</button>
+
+                <div style="margin-top: 1.5rem;">
+                    <label>Payload JSON Generado:</label>
+                    <pre id="payloadPreview"></pre>
+                </div>
+            </div>
+
+            <!-- Columna Derecha: Consola de Resultados y Explicacion -->
+            <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <div class="card-title">Resultado de la Invocación</div>
+                    <span class="info-tag" id="statusTag">Espera</span>
+                    <pre id="resultadoConsola" class="console-error" style="color: var(--text-muted);">Haga clic en "Calcular" para iniciar la prueba.</pre>
+                </div>
+
+                <div style="margin-top: 2rem; border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
+                    <div class="card-title" style="font-size: 1.1rem; border: none; margin-bottom: 0.8rem;">Flujo Correcto y Observaciones</div>
+                    <ul class="limits-list">
+                        <li>
+                            <strong>CORS resuelto:</strong> El navegador llama al proxy local con CORS habilitado y el proxy consume SOAP sin restricciones.
+                        </li>
+                        <li>
+                            <strong>XML oculto:</strong> El frontend trabaja con JSON; el sobre SOAP se arma en el servidor con `zeep`.
+                        </li>
+                        <li>
+                            <strong>Respuesta limpia:</strong> El proxy devuelve un JSON con el resultado listo para mostrar.
+                        </li>
+                        <li>
+                            <strong>Operaciones ampliadas:</strong> Se incluyen Sumar, Restar, Multiplicar, Dividir y Módulo.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Construye el payload JSON para el proxy
+        function obtenerPayload(op, a, b) {
+            return {
+                operacion: op,
+                a: Number(a),
+                b: Number(b)
+            };
+        }
+
+        // Actualiza la vista previa del JSON en tiempo real
+        function actualizarPayload() {
+            const op = document.getElementById("operacion").value;
+            const a = document.getElementById("num1").value;
+            const b = document.getElementById("num2").value;
+
+            const payload = obtenerPayload(op, a, b);
+            document.getElementById("payloadPreview").textContent = JSON.stringify(payload, null, 2);
+        }
+
+        // Ejecuta la peticion SOAP usando fetch
+        function enviarPeticionSOAP() {
+            const endpoint = document.getElementById("endpoint").value;
+            const op = document.getElementById("operacion").value;
+            const a = document.getElementById("num1").value;
+            const b = document.getElementById("num2").value;
+            const payload = obtenerPayload(op, a, b);
+
+            const consoleElem = document.getElementById("resultadoConsola");
+            const tagElem = document.getElementById("statusTag");
+
+            consoleElem.textContent = "Enviando solicitud al proxy: " + endpoint + "...\n";
+            consoleElem.style.color = "#93c5fd";
+            tagElem.textContent = "Enviando";
+            tagElem.style.backgroundColor = "rgba(59, 130, 246, 0.2)";
+            tagElem.style.color = "#93c5fd";
+            tagElem.style.border = "1px solid rgba(59, 130, 246, 0.3)";
+
+            const headers = {
+                "Content-Type": "application/json"
+            };
+
+            fetch(endpoint, {
+                method: "POST",
+                headers: headers,
+                body: JSON.stringify(payload)
+            })
+            .then(response => {
+                return response.json().then(data => {
+                    if (!response.ok) {
+                        const mensaje = data && data.error ? data.error : "Error HTTP " + response.status;
+                        throw new Error(mensaje);
+                    }
+                    return data;
+                });
+            })
+            .then(data => {
+                const detalle = data.detalle ? ("\nDetalle: " + data.detalle) : "";
+                consoleElem.textContent =
+                    "Conexion exitosa!\n\n" +
+                    "Operacion: " + data.operacion + "\n" +
+                    "Operandos: " + data.a + " y " + data.b + "\n" +
+                    "Resultado: " + data.resultado + "\n" +
+                    "WSDL: " + data.wsdl + detalle;
+                consoleElem.style.color = "#a7f3d0";
+                tagElem.textContent = "Exito";
+                tagElem.style.backgroundColor = "rgba(16, 185, 129, 0.2)";
+                tagElem.style.color = "#a7f3d0";
+                tagElem.style.border = "1px solid rgba(16, 185, 129, 0.3)";
+            })
+            .catch(error => {
+                consoleElem.textContent = "ERROR DE CONEXION:\n\n" +
+                                          error.message + "\n\n" +
+                                          "Verifique que el proxy CORS este en ejecucion y que tenga acceso a Internet.";
+                consoleElem.style.color = "#fca5a5";
+                tagElem.textContent = "Error";
+                tagElem.style.backgroundColor = "rgba(239, 68, 68, 0.2)";
+                tagElem.style.color = "#fca5a5";
+                tagElem.style.border = "1px solid rgba(239, 68, 68, 0.3)";
+            });
+        }
+
+        // Carga inicial
+        actualizarPayload();
+    </script>
+</body>
+</html>
