@@ -1,0 +1,27 @@
+{
+  "multiLab": false,
+  "sessions": [],
+  "capture": {
+    "columns": 120,
+    "freezeFlags": [],
+    "prompt": "❯ ",
+    "colors": {
+      "args": "33",
+      "command": "36",
+      "prompt": "32",
+      "reset": "0"
+    }
+  },
+  "prepare": {
+    "input": {
+      "srcDir": "src",
+      "reportFile": "report.typ"
+    },
+    "output": {
+      "submissionDir": "submission",
+      "fileTemplate": "{output_type}_{lab_number}",
+      "reportWord": "Informe",
+      "codeWord": "Código Fuente"
+    }
+  }
+}
