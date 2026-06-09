@@ -47,7 +47,7 @@
 
     #[#text(size: 12pt, weight: "bold")[I. DESARROLLO DE EJERCICIOS PROPUESTOS]]
 
-    Repositorio del laboratorio: #link("https://github.com/ST0731-29-3821-3041/SD_labSQL")
+    Repositorio del laboratorio: #link("https://github.com/unsa-semester-2026-A/sis_dis_lab.git")
 
     #v(0.3em)
 
