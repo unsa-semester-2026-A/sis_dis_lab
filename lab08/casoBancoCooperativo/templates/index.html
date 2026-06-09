@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg:         #FAFAF8;
+            --white:      #FFFFFF;
+            --ink:        #111210;
+            --muted:      #9A9890;
+            --border:     #E4E2DC;
+            --border-2:   #CDCBC4;
+            --navy:       #1B2A4A;
+            --navy-2:     #EEF1F7;
+            --blue:       #2C5282;
+            --teal:       #2A7A6F;
+            --teal-2:     #E6F4F2;
+            --amber:      #B45309;
+            --amber-2:    #FEF3C7;
+            --red:        #9B1C1C;
+            --red-2:      #FEE2E2;
+            --green:      #166534;
+            --green-2:    #DCFCE7;
+            --purple:     #5B21B6;
+            --purple-2:   #EDE9FE;
+            --orange:     #C2410C;
+            --orange-2:   #FFEDD5;
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'IBM Plex Sans', sans-serif;
+            background: var(--bg);
+            color: var(--ink);
+            min-height: 100vh;
+        }
+
+        /* ── HEADER ── */
+        .header {
+            background: var(--navy);
+            padding: 0 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 64px;
+        }
+        .header-left { display: flex; flex-direction: column; justify-content: center; gap: 0.2rem; padding: 1rem 0; }
+        .header-eyebrow {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.55rem; font-weight: 400;
+            letter-spacing: 0.22em; text-transform: uppercase;
+            color: #6A85B0;
+        }
+        .header h1 {
+            font-family: 'Playfair Display', serif;
+            font-weight: 400; font-size: 1.3rem;
+            letter-spacing: 0.01em; color: #FFF;
+        }
+        .header-right { display: flex; align-items: center; gap: 1.5rem; }
+        .header-stat { text-align: right; }
+        .header-stat-label {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.5rem; letter-spacing: 0.16em;
+            text-transform: uppercase; color: #6A85B0; display: block;
+        }
+        .header-stat-val {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.75rem; font-weight: 500; color: #C8D8F0;
+        }
+        .header-divider { width: 1px; height: 28px; background: #2E4268; }
+
+        /* ── PAGE ── */
+        .page { max-width: 1100px; margin: 0 auto; padding: 2.5rem 2rem 5rem; display: flex; flex-direction: column; gap: 2.5rem; }
+
+        /* ── SECTION LABEL ── */
+        .slabel { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1rem; }
+        .slabel-num {
+            font-family: 'IBM Plex Mono', monospace; font-size: 0.55rem;
+            font-weight: 500; color: var(--blue);
+            background: var(--navy-2); padding: 0.2rem 0.5rem;
+            border-radius: 2px; letter-spacing: 0.08em;
+        }
+        .slabel-text {
+            font-family: 'IBM Plex Mono', monospace; font-size: 0.6rem;
+            font-weight: 500; letter-spacing: 0.2em;
+            text-transform: uppercase; color: var(--muted);
+        }
+        .slabel-line { flex: 1; height: 1px; background: var(--border); }
+
+        /* ── CARD ── */
+        .card {
+            background: var(--white); border: 1px solid var(--border);
+            border-radius: 2px; padding: 2rem 2rem 1.75rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+
+        /* ── FORM ── */
+        .form-grid {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            background: #F1F3F5;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px dashed var(--border-2);
+        }
+        .form-step { flex: 1; }
+        .form-arrow { 
+            color: var(--muted); 
+            font-size: 1.5rem; 
+            padding-top: 1rem;
+            font-family: 'IBM Plex Mono', monospace;
+        }
+        @media (max-width: 720px) { .form-grid { grid-template-columns: 1fr 1fr; } }
+
+        .field-label {
+            display: block; font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.58rem; font-weight: 500;
+            letter-spacing: 0.18em; text-transform: uppercase;
+            color: var(--muted); margin-bottom: 0.5rem;
+        }
+        select, input[type="number"] {
+            width: 100%; background: var(--bg);
+            border: 1px solid var(--border-2); border-radius: 2px;
+            padding: 0.65rem 0.85rem;
+            font-family: 'IBM Plex Sans', sans-serif;
+            font-size: 0.875rem; font-weight: 400; color: var(--ink);
+            appearance: none; outline: none;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        select:focus, input[type="number"]:focus {
+            border-color: var(--blue);
+            box-shadow: 0 0 0 3px rgba(44,82,130,0.08);
+        }
+        .monto-wrap { position: relative; }
+        .monto-prefix {
+            position: absolute; left: 0.85rem; top: 50%;
+            transform: translateY(-50%);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.75rem; color: var(--muted); pointer-events: none;
+        }
+        .monto-wrap input { padding-left: 2.2rem; }
+
+        /* ── BUTTONS ── */
+        .btn-section-label {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.55rem; font-weight: 500;
+            letter-spacing: 0.16em; text-transform: uppercase;
+            color: var(--muted); margin-bottom: 0.6rem; display: block;
+        }
+        .btn-row {
+            display: flex; gap: 0.6rem; flex-wrap: wrap;
+            margin-top: 1.75rem; padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+        }
+        .btn-group { display: flex; flex-direction: column; gap: 0.4rem; }
+        .btn-group-row { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+
+        .btn {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.6rem; font-weight: 500;
+            letter-spacing: 0.1em; text-transform: uppercase;
+            padding: 0.65rem 1.2rem; border: 1px solid transparent;
+            border-radius: 2px; cursor: pointer;
+            transition: all 0.15s;
+        }
+        .btn:hover  { transform: translateY(-1px); }
+        .btn:active { transform: translateY(0); }
+
+        .btn-commit   { background: var(--green-2);  color: var(--green);  border-color: #BBF7D0; }
+        .btn-commit:hover { background: #C3FADA; }
+        .btn-red-net  { background: var(--red-2);    color: var(--red);    border-color: #FECACA; }
+        .btn-red-net:hover { background: #FFD0D0; }
+        .btn-node     { background: var(--orange-2); color: var(--orange); border-color: #FED7AA; }
+        .btn-node:hover { background: #FFE4C0; }
+        .btn-recover  { background: var(--purple-2); color: var(--purple); border-color: #DDD6FE; }
+        .btn-recover:hover { background: #E8E3FF; }
+
+        .btn-sep {
+            width: 1px; background: var(--border);
+            margin: 0 0.3rem; align-self: stretch;
+        }
+
+        /* ── BANKS ── */
+        .banks-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
+        @media (max-width: 700px) { .banks-grid { grid-template-columns: 1fr; } }
+
+        .bank-card {
+            background: var(--white); border: 1px solid var(--border);
+            border-radius: 2px; overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        .bank-stripe { height: 3px; }
+        .stripe-arequipa { background: var(--navy); }
+        .stripe-cusco    { background: var(--teal); }
+        .stripe-trujillo { background: var(--amber); }
+
+        .bank-header {
+            padding: 1rem 1.4rem 0.85rem; border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .bank-name {
+            font-family: 'Playfair Display', serif;
+            font-weight: 400; font-size: 1rem; color: var(--ink);
+        }
+        .node-tag {
+            font-family: 'IBM Plex Mono', monospace; font-size: 0.53rem;
+            font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase;
+            padding: 0.22rem 0.55rem; border-radius: 2px;
+        }
+        .tag-arequipa { background: var(--navy-2);  color: var(--navy); }
+        .tag-cusco    { background: var(--teal-2);  color: var(--teal); }
+        .tag-trujillo { background: var(--amber-2); color: var(--amber); }
+
+        .bank-table { width: 100%; border-collapse: collapse; }
+        .bank-table thead tr { background: var(--bg); }
+        .bank-table th {
+            font-family: 'IBM Plex Mono', monospace; font-size: 0.53rem;
+            font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase;
+            color: var(--muted); padding: 0.55rem 1.4rem; text-align: left;
+        }
+        .bank-table th:last-child { text-align: right; }
+        .bank-table td {
+            padding: 0.7rem 1.4rem; font-size: 0.84rem; font-weight: 300;
+            border-top: 1px solid var(--border); color: var(--ink);
+        }
+        .bank-table td.saldo {
+            text-align: right; font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.8rem; font-weight: 400; color: var(--ink);
+        }
+        .saldo-prefix { font-size: 0.65rem; color: var(--muted); margin-right: 0.1rem; }
+
+        /* ── LOGS ── */
+        .log-card {
+            background: var(--white); border: 1px solid var(--border);
+            border-radius: 2px; overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        .log-top {
+            padding: 0.85rem 1.5rem; border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; gap: 0.75rem;
+            background: var(--bg);
+        }
+        .log-top-label {
+            font-family: 'IBM Plex Mono', monospace; font-size: 0.58rem;
+            font-weight: 500; letter-spacing: 0.2em; text-transform: uppercase;
+            color: var(--muted);
+        }
+        .log-status {
+            margin-left: auto; font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.55rem; font-weight: 400;
+            letter-spacing: 0.1em; text-transform: uppercase;
+            color: var(--muted); border: 1px solid var(--border);
+            padding: 0.18rem 0.55rem; border-radius: 2px;
+        }
+        .log-body { padding: 1.25rem 1.5rem; min-height: 7rem; }
+
+        .log-line {
+            font-family: 'IBM Plex Mono', monospace; font-size: 0.73rem;
+            font-weight: 300; color: var(--teal); line-height: 2; display: block;
+        }
+        .log-line::before { content: '→  '; color: var(--border-2); }
+        .log-error {
+            font-family: 'IBM Plex Mono', monospace; font-size: 0.73rem;
+            font-weight: 400; color: var(--red); line-height: 2; display: block;
+        }
+        .log-error::before { content: '✕  '; }
+        .log-warn {
+            font-family: 'IBM Plex Mono', monospace; font-size: 0.73rem;
+            font-weight: 400; color: var(--orange); line-height: 2; display: block;
+        }
+        .log-warn::before { content: '⚠  '; }
+        .log-recover {
+            font-family: 'IBM Plex Mono', monospace; font-size: 0.73rem;
+            font-weight: 400; color: var(--purple); line-height: 2; display: block;
+        }
+        .log-recover::before { content: '↺  '; }
+        .log-empty {
+            font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem;
+            font-weight: 300; color: var(--border-2);
+        }
+
+        /* ── ANÁLISIS ── */
+        .analisis-card {
+            background: var(--white); border: 1px solid var(--border);
+            border-radius: 2px; overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        .analisis-header {
+            padding: 0.85rem 1.5rem; border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; gap: 0.75rem;
+            background: var(--bg);
+        }
+        .analisis-header-label {
+            font-family: 'IBM Plex Mono', monospace; font-size: 0.58rem;
+            font-weight: 500; letter-spacing: 0.2em; text-transform: uppercase;
+            color: var(--muted);
+        }
+        .analisis-body { padding: 0; }
+        .analisis-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; }
+        @media (max-width: 700px) { .analisis-grid { grid-template-columns: 1fr; } }
+
+        .analisis-col {
+            padding: 1.5rem;
+            border-right: 1px solid var(--border);
+        }
+        .analisis-col:last-child { border-right: none; }
+
+        .analisis-col-title {
+            font-family: 'IBM Plex Mono', monospace; font-size: 0.6rem;
+            font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase;
+            margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;
+        }
+        .analisis-dot {
+            width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+        }
+        .dot-consistencia { background: var(--red); }
+        .dot-disponibilidad { background: var(--orange); }
+        .dot-estrategias { background: var(--green); }
+
+        .col-consistencia .analisis-col-title { color: var(--red); }
+        .col-disponibilidad .analisis-col-title { color: var(--orange); }
+        .col-estrategias .analisis-col-title { color: var(--green); }
+
+        .analisis-empty {
+            font-family: 'IBM Plex Mono', monospace; font-size: 0.68rem;
+            font-weight: 300; color: var(--border-2); line-height: 1.8;
+        }
+        .analisis-item {
+            font-family: 'IBM Plex Sans', sans-serif; font-size: 0.8rem;
+            font-weight: 300; color: var(--ink); line-height: 1.7;
+            margin-bottom: 0.5rem; padding-left: 0.9rem;
+            border-left: 2px solid var(--border); display: block;
+        }
+        .analisis-item-warn  { border-left-color: var(--red); }
+        .analisis-item-avail { border-left-color: var(--orange); }
+        .analisis-item-strat { border-left-color: var(--green); }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <div class="header-left">
+            <span class="header-eyebrow">Caso de Estudio - Actividades 4 - 5</span>
+            <h1>Sistema Nacional de Bancos Cooperativos</h1>
+        </div>
+        <div class="header-right">
+            <div class="header-stat">
+                <span class="header-stat-label">Protocolo</span>
+                <span class="header-stat-val">2PC</span>
+            </div>
+            <div class="header-divider"></div>
+            <div class="header-stat">
+                <span class="header-stat-label">Nodos activos</span>
+                <span class="header-stat-val">3 / 3</span>
+            </div>
+            <div class="header-divider"></div>
+            <div class="header-stat">
+                <span class="header-stat-label">Motor</span>
+                <span class="header-stat-val">PostgreSQL</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="page">
+
+        <!-- ── TRANSFERENCIA ── -->
+        <section>
+            <div class="slabel">
+                <span class="slabel-num">SISTEMA</span>
+                <span class="slabel-text">Simulacion con PostgreSQL - Nueva Transferencia</span>
+                <div class="slabel-line"></div>
+            </div>
+            <div class="card">
+                <form method="POST">
+                    <div class="form-grid">
+                        <div class="form-step">
+                            <label class="field-label">Banco de Origen</label>
+                            <select name="origen">
+                                {% for clave, nombre in sedes.items() %}
+                                <option value="{{ clave }}">{{ nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-arrow">---></div>
+                        <div class="form-step" style="max-width: 180px;">
+                            <label class="field-label">Monto a Transferir</label>
+                            <div class="monto-wrap">
+                                <span class="monto-prefix">S/</span>
+                                <input type="number" name="monto" value="25000" min="1" step="0.01">
+                            </div>
+                        </div>
+                        <div class="form-arrow">---></div>
+                        <div class="form-step">
+                            <label class="field-label">Banco de Destino</label>
+                            <select name="destino">
+                                {% for clave, nombre in sedes.items() %}
+                                <option value="{{ clave }}">{{ nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="btn-row" style="justify-content: center; gap: 1rem;">
+                        <button type="submit" formaction="/transferir" class="btn btn-commit">
+                            Global Commit
+                        </button>
+                        <button type="submit" formaction="/fallo_red" class="btn btn-red-net">
+                            Falla de Red
+                        </button>
+                        <button type="submit" formaction="/caida_nodo" class="btn btn-node">
+                            Caida de Nodo
+                        </button>
+                        <button type="submit" formaction="/recuperacion" class="btn btn-recover">
+                            Recuperacion
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- ── CUENTAS ── -->
+        <section>
+            <div class="slabel">
+                <span class="slabel-num">Nodos</span>
+                <span class="slabel-text">Cuentas por Banco</span>
+                <div class="slabel-line"></div>
+            </div>
+            <div class="banks-grid">
+
+                <div class="bank-card">
+                    <div class="bank-stripe stripe-arequipa"></div>
+                    <div class="bank-header">
+                        <span class="bank-name">Arequipa</span>
+                        <span class="node-tag tag-arequipa">Nodo 1</span>
+                    </div>
+                    <table class="bank-table">
+                        <thead><tr><th>Titular</th><th>Saldo</th></tr></thead>
+                        <tbody>
+                            {% for fila in banco_arequipa %}
+                            <tr>
+                                <td>{{ fila[0] }}</td>
+                                <td class="saldo"><span class="saldo-prefix">S/</span>{{ "%.2f"|format(fila[1]) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="bank-card">
+                    <div class="bank-stripe stripe-cusco"></div>
+                    <div class="bank-header">
+                        <span class="bank-name">Cusco</span>
+                        <span class="node-tag tag-cusco">Nodo 2</span>
+                    </div>
+                    <table class="bank-table">
+                        <thead><tr><th>Titular</th><th>Saldo</th></tr></thead>
+                        <tbody>
+                            {% for fila in banco_cusco %}
+                            <tr>
+                                <td>{{ fila[0] }}</td>
+                                <td class="saldo"><span class="saldo-prefix">S/</span>{{ "%.2f"|format(fila[1]) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="bank-card">
+                    <div class="bank-stripe stripe-trujillo"></div>
+                    <div class="bank-header">
+                        <span class="bank-name">Trujillo</span>
+                        <span class="node-tag tag-trujillo">Nodo 3</span>
+                    </div>
+                    <table class="bank-table">
+                        <thead><tr><th>Titular</th><th>Saldo</th></tr></thead>
+                        <tbody>
+                            {% for fila in banco_trujillo %}
+                            <tr>
+                                <td>{{ fila[0] }}</td>
+                                <td class="saldo"><span class="saldo-prefix">S/</span>{{ "%.2f"|format(fila[1]) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ── LOGS 2PC ── -->
+        <section>
+            <div class="slabel">
+                <span class="slabel-num">LOGS</span>
+                <span class="slabel-text">Protocolo 2PC - Transaction Log</span>
+                <div class="slabel-line"></div>
+            </div>
+            <div class="log-card">
+                <div class="log-top">
+                    <span class="log-top-label">Two-Phase Commit · Output Stream</span>
+                    <span class="log-status">PostgreSQL · distributed</span>
+                </div>
+                <div class="log-body">
+                    {% if logs %}
+                        {% for log in logs %}
+                            {% if 'ERROR' in log or 'ROLLBACK' in log or 'cancelada' in log %}
+                                <span class="log-error">{{ log }}</span>
+                            {% elif 'FALLA DE RED' in log or 'pérdida de paquetes' in log or 'timeout' in log.lower() %}
+                                <span class="log-warn">{{ log }}</span>
+                            {% elif 'CAÍDA' in log or 'nodo caído' in log.lower() or 'no responde' in log.lower() %}
+                                <span class="log-warn">{{ log }}</span>
+                            {% elif 'RECUPERACIÓN' in log or 'recuperado' in log.lower() or 'en línea' in log.lower() %}
+                                <span class="log-recover">{{ log }}</span>
+                            {% else %}
+                                <span class="log-line">{{ log }}</span>
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <span class="log-empty">// Esperando ejecucion...</span>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+
+
+
+    </div>
+</body>
+</html>
