@@ -1,0 +1,12 @@
+com\logifresh\notificaciones\dto\NotificacionResponse.class
+com\logifresh\notificaciones\service\NotificacionService.class
+com\logifresh\notificaciones\controller\NotificacionController.class
+com\logifresh\notificaciones\dto\NotificacionRequest.class
+com\logifresh\notificaciones\controller\HealthController.class
+com\logifresh\notificaciones\NotificacionesApplication.class
+com\logifresh\notificaciones\model\EstadoNotificacion.class
+com\logifresh\notificaciones\service\StatusService.class
+com\logifresh\notificaciones\repository\NotificacionRepository.class
+com\logifresh\notificaciones\exception\NotificacionNotFoundException.class
+com\logifresh\notificaciones\model\Notificacion.class
+com\logifresh\notificaciones\exception\GlobalExceptionHandler.class

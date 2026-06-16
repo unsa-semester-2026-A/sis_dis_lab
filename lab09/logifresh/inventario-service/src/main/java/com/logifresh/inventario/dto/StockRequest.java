@@ -1,0 +1,21 @@
+package com.logifresh.inventario.dto;
+
+import jakarta.validation.constraints.Positive;
+
+public class StockRequest {
+
+    @Positive(message = "La cantidad debe ser mayor a cero")
+    private Integer cantidad;
+
+    public StockRequest() {
+    }
+
+    public Integer getCantidad() {
+        return cantidad;
+    }
+
+    public void setCantidad(Integer cantidad) {
+        this.cantidad = cantidad;
+    }
+
+}

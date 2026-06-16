@@ -1,0 +1,5 @@
+com\logifresh\inventario\concurrency\InventarioConcurrenciaTest$TipoResultado.class
+com\logifresh\inventario\controller\ProductoControllerIntegrationTest.class
+com\logifresh\inventario\concurrency\InventarioConcurrenciaTest$Resultado.class
+com\logifresh\inventario\service\ProductoServiceTest.class
+com\logifresh\inventario\concurrency\InventarioConcurrenciaTest.class

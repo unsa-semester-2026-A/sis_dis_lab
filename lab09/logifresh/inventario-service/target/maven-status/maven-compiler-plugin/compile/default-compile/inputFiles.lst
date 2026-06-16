@@ -1,0 +1,14 @@
+C:\Users\hp\Desktop\Evidencias\Semestre VII\Sistemas Distribuidos\Laboratorio\LAB personal\LAB 9\logifresh\inventario-service\src\main\java\com\logifresh\inventario\config\SimulationFilter.java
+C:\Users\hp\Desktop\Evidencias\Semestre VII\Sistemas Distribuidos\Laboratorio\LAB personal\LAB 9\logifresh\inventario-service\src\main\java\com\logifresh\inventario\controller\HealthController.java
+C:\Users\hp\Desktop\Evidencias\Semestre VII\Sistemas Distribuidos\Laboratorio\LAB personal\LAB 9\logifresh\inventario-service\src\main\java\com\logifresh\inventario\controller\ProductoController.java
+C:\Users\hp\Desktop\Evidencias\Semestre VII\Sistemas Distribuidos\Laboratorio\LAB personal\LAB 9\logifresh\inventario-service\src\main\java\com\logifresh\inventario\dto\ProductoRequest.java
+C:\Users\hp\Desktop\Evidencias\Semestre VII\Sistemas Distribuidos\Laboratorio\LAB personal\LAB 9\logifresh\inventario-service\src\main\java\com\logifresh\inventario\dto\ProductoResponse.java
+C:\Users\hp\Desktop\Evidencias\Semestre VII\Sistemas Distribuidos\Laboratorio\LAB personal\LAB 9\logifresh\inventario-service\src\main\java\com\logifresh\inventario\dto\StockRequest.java
+C:\Users\hp\Desktop\Evidencias\Semestre VII\Sistemas Distribuidos\Laboratorio\LAB personal\LAB 9\logifresh\inventario-service\src\main\java\com\logifresh\inventario\exception\GlobalExceptionHandler.java
+C:\Users\hp\Desktop\Evidencias\Semestre VII\Sistemas Distribuidos\Laboratorio\LAB personal\LAB 9\logifresh\inventario-service\src\main\java\com\logifresh\inventario\exception\ProductoNotFoundException.java
+C:\Users\hp\Desktop\Evidencias\Semestre VII\Sistemas Distribuidos\Laboratorio\LAB personal\LAB 9\logifresh\inventario-service\src\main\java\com\logifresh\inventario\exception\StockInsuficienteException.java
+C:\Users\hp\Desktop\Evidencias\Semestre VII\Sistemas Distribuidos\Laboratorio\LAB personal\LAB 9\logifresh\inventario-service\src\main\java\com\logifresh\inventario\InventarioApplication.java
+C:\Users\hp\Desktop\Evidencias\Semestre VII\Sistemas Distribuidos\Laboratorio\LAB personal\LAB 9\logifresh\inventario-service\src\main\java\com\logifresh\inventario\model\Producto.java
+C:\Users\hp\Desktop\Evidencias\Semestre VII\Sistemas Distribuidos\Laboratorio\LAB personal\LAB 9\logifresh\inventario-service\src\main\java\com\logifresh\inventario\repository\ProductoRepository.java
+C:\Users\hp\Desktop\Evidencias\Semestre VII\Sistemas Distribuidos\Laboratorio\LAB personal\LAB 9\logifresh\inventario-service\src\main\java\com\logifresh\inventario\service\ProductoService.java
+C:\Users\hp\Desktop\Evidencias\Semestre VII\Sistemas Distribuidos\Laboratorio\LAB personal\LAB 9\logifresh\inventario-service\src\main\java\com\logifresh\inventario\service\StatusService.java

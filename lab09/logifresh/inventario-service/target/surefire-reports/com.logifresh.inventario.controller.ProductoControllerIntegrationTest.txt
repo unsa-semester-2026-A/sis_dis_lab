@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.logifresh.inventario.controller.ProductoControllerIntegrationTest
+-------------------------------------------------------------------------------
+Tests run: 10, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 23.10 s -- in com.logifresh.inventario.controller.ProductoControllerIntegrationTest

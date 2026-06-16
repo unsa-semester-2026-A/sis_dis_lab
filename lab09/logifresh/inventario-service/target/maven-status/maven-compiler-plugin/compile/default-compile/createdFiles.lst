@@ -1,0 +1,14 @@
+com\logifresh\inventario\config\SimulationFilter.class
+com\logifresh\inventario\exception\ProductoNotFoundException.class
+com\logifresh\inventario\dto\ProductoResponse.class
+com\logifresh\inventario\InventarioApplication.class
+com\logifresh\inventario\exception\GlobalExceptionHandler.class
+com\logifresh\inventario\controller\ProductoController.class
+com\logifresh\inventario\model\Producto.class
+com\logifresh\inventario\service\StatusService.class
+com\logifresh\inventario\repository\ProductoRepository.class
+com\logifresh\inventario\dto\StockRequest.class
+com\logifresh\inventario\exception\StockInsuficienteException.class
+com\logifresh\inventario\dto\ProductoRequest.class
+com\logifresh\inventario\service\ProductoService.class
+com\logifresh\inventario\controller\HealthController.class
