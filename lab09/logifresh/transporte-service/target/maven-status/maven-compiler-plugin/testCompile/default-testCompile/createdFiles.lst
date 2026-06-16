@@ -1,0 +1,3 @@
+com\logifresh\transporte\functional\TransporteFunctionalTest.class
+com\logifresh\transporte\service\TransporteServiceTest.class
+com\logifresh\transporte\controller\TransporteControllerIntegrationTest.class

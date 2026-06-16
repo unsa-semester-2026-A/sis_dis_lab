@@ -1,0 +1,14 @@
+com\logifresh\transporte\dto\TransporteEstadoRequest.class
+com\logifresh\transporte\repository\TransporteRepository.class
+com\logifresh\transporte\controller\HealthController.class
+com\logifresh\transporte\model\Transporte.class
+com\logifresh\transporte\exception\TransporteNotFoundException.class
+com\logifresh\transporte\TransporteApplication.class
+com\logifresh\transporte\dto\TransporteRequest.class
+com\logifresh\transporte\service\StatusService.class
+com\logifresh\transporte\config\SimulationFilter.class
+com\logifresh\transporte\model\EstadoTransporte.class
+com\logifresh\transporte\service\TransporteService.class
+com\logifresh\transporte\controller\TransporteController.class
+com\logifresh\transporte\dto\TransporteResponse.class
+com\logifresh\transporte\exception\GlobalExceptionHandler.class
