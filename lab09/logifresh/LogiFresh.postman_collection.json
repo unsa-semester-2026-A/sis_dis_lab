@@ -1,0 +1,367 @@
+{
+  "info": {
+    "name": "LogiFresh — Tests de Integracion",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "productoId", "value": "" },
+    { "key": "pedidoId", "value": "" },
+    { "key": "facturaId", "value": "" },
+    { "key": "transporteId", "value": "" },
+    { "key": "notificacionId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "01 - Crear producto en inventario",
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "var json;",
+            "try { json = pm.response.json(); } catch(e) {",
+            "    pm.expect.fail('Respuesta no es JSON: ' + pm.response.text());",
+            "    return;",
+            "}",
+            "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+            "pm.test(\"Tiene id, codigo, nombre, stock\", () => {",
+            "    ['id','codigo','nombre','stock'].forEach(k => pm.expect(json).to.have.property(k));",
+            "});",
+            "pm.test(\"Stock inicial es 100\", () => pm.expect(json.stock).to.eql(100));",
+            "pm.test(\"ID es positivo\", () => pm.expect(json.id).to.be.at.least(1));",
+            "pm.collectionVariables.set('productoId', String(json.id));",
+            "console.log('productoId =', json.id);"
+          ],
+          "type": "text/javascript"
+        }
+      }],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"codigo\": \"INT-TEST-001\",\n  \"nombre\": \"Producto Integracion\",\n  \"stock\": 100,\n  \"stockMinimo\": 10\n}"
+        },
+        "url": "http://localhost:8082/api/inventario/productos"
+      }
+    },
+    {
+      "name": "02 - Saga completa + verificar efectos cruzados",
+      "event": [{
+        "listen": "prerequest",
+        "script": {
+          "exec": [
+            "var pId = parseInt(pm.collectionVariables.get('productoId') || '1');",
+            "pm.request.body.raw = JSON.stringify({",
+            "    cliente: 'Cliente Integracion',",
+            "    productoId: pId,",
+            "    cantidad: 5,",
+            "    precioUnitario: 100.00",
+            "}, null, 2);"
+          ],
+          "type": "text/javascript"
+        }
+      },{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "var json;",
+            "try { json = pm.response.json(); } catch(e) {",
+            "    pm.expect.fail('Respuesta no es JSON: ' + pm.response.text());",
+            "    return;",
+            "}",
+            "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+            "pm.test(\"Tiene pedidoId,facturaId,transporteId,notificacionId,estado\", () => {",
+            "    ['pedidoId','facturaId','transporteId','notificacionId','estado'].forEach(k =>",
+            "        pm.expect(json).to.have.property(k));",
+            "});",
+            "pm.test(\"Estado PROCESADO\", () => pm.expect(json.estado).to.eql('PROCESADO'));",
+            "pm.test(\"IDs > 0\", () => {",
+            "    [json.pedidoId, json.facturaId, json.transporteId, json.notificacionId].forEach(id =>",
+            "        pm.expect(id).to.be.a('number').and.to.be.at.least(1));",
+            "});",
+            "",
+            "pm.collectionVariables.set('pedidoId', String(json.pedidoId));",
+            "pm.collectionVariables.set('facturaId', String(json.facturaId));",
+            "pm.collectionVariables.set('transporteId', String(json.transporteId));",
+            "pm.collectionVariables.set('notificacionId', String(json.notificacionId));",
+            "",
+            "var pId = pm.collectionVariables.get('productoId');",
+            "",
+            "pm.sendRequest('http://localhost:8083/api/facturas/' + json.facturaId, function(err, res) {",
+            "    if (err) { pm.expect.fail('GET factura fallo: ' + err); return; }",
+            "    pm.test(\"[Cross] Factura existe en facturacion-service\", function() {",
+            "        pm.expect(res.code).to.eql(200);",
+            "        pm.expect(res.json().pedidoId).to.eql(json.pedidoId);",
+            "    });",
+            "});",
+            "",
+            "pm.sendRequest('http://localhost:8084/api/transporte/' + json.transporteId, function(err, res) {",
+            "    if (err) { pm.expect.fail('GET transporte fallo: ' + err); return; }",
+            "    pm.test(\"[Cross] Transporte existe en transporte-service\", function() {",
+            "        pm.expect(res.code).to.eql(200);",
+            "        pm.expect(res.json().pedidoId).to.eql(json.pedidoId);",
+            "    });",
+            "});",
+            "",
+            "pm.sendRequest('http://localhost:8085/api/notificaciones/' + json.notificacionId, function(err, res) {",
+            "    if (err) { pm.expect.fail('GET notificacion fallo: ' + err); return; }",
+            "    pm.test(\"[Cross] Notificacion existe en notificaciones-service\", function() {",
+            "        pm.expect(res.code).to.eql(200);",
+            "        pm.expect(res.json().destinatario).to.eql('Cliente Integracion');",
+            "    });",
+            "});",
+            "",
+            "pm.sendRequest('http://localhost:8082/api/inventario/productos/' + pId, function(err, res) {",
+            "    if (err) { pm.expect.fail('GET producto fallo: ' + err); return; }",
+            "    pm.test(\"[Cross] Stock se redujo en inventario-service\", function() {",
+            "        pm.expect(res.code).to.eql(200);",
+            "        pm.expect(res.json().stock).to.eql(95);",
+            "    });",
+            "});"
+          ],
+          "type": "text/javascript"
+        }
+      }],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{}" },
+        "url": "http://localhost:8081/api/pedidos/procesar"
+      }
+    },
+    {
+      "name": "03 - Cancelar pedido",
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "var json;",
+            "try { json = pm.response.json(); } catch(e) {",
+            "    pm.expect.fail('Respuesta no es JSON: ' + pm.response.text());",
+            "    return;",
+            "}",
+            "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+            "pm.test(\"Estado CANCELADO\", () => pm.expect(json.estado).to.eql('CANCELADO'));",
+            "pm.test(\"ID coincide\", () => pm.expect(json.id).to.eql(parseInt(pm.collectionVariables.get('pedidoId'))));"
+          ],
+          "type": "text/javascript"
+        }
+      }],
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "url": "http://localhost:8081/api/pedidos/{{pedidoId}}/cancelar"
+      }
+    },
+    {
+      "name": "04 - Actualizar estado de transporte",
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "var json;",
+            "try { json = pm.response.json(); } catch(e) {",
+            "    pm.expect.fail('Respuesta no es JSON: ' + pm.response.text());",
+            "    return;",
+            "}",
+            "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+            "pm.test(\"Estado EN_RUTA\", () => pm.expect(json.estado).to.eql('EN_RUTA'));",
+            "pm.test(\"ID coincide\", () => pm.expect(json.id).to.eql(parseInt(pm.collectionVariables.get('transporteId'))));"
+          ],
+          "type": "text/javascript"
+        }
+      }],
+      "request": {
+        "method": "PUT",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"estado\": \"EN_RUTA\"\n}" },
+        "url": "http://localhost:8084/api/transporte/{{transporteId}}/estado"
+      }
+    },
+    {
+      "name": "05 - Stock insuficiente rechaza pedido",
+      "event": [{
+        "listen": "prerequest",
+        "script": {
+          "exec": [
+            "var pId = parseInt(pm.collectionVariables.get('productoId') || '1');",
+            "pm.request.body.raw = JSON.stringify({",
+            "    cliente: 'Sin Stock',",
+            "    productoId: pId,",
+            "    cantidad: 9999,",
+            "    precioUnitario: 100.00",
+            "}, null, 2);"
+          ],
+          "type": "text/javascript"
+        }
+      },{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "var json;",
+            "try { json = pm.response.json(); } catch(e) {",
+            "    pm.expect.fail('Respuesta no es JSON: ' + pm.response.text());",
+            "    return;",
+            "}",
+            "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+            "var msg = json.error || JSON.stringify(json);",
+            "pm.test(\"Mensaje incluye 'Stock insuficiente'\", () => pm.expect(msg).to.include('Stock insuficiente'));"
+          ],
+          "type": "text/javascript"
+        }
+      }],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{}" },
+        "url": "http://localhost:8081/api/pedidos/procesar"
+      }
+    },
+    {
+      "name": "06 - Request invalido devuelve 400",
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "var json;",
+            "try { json = pm.response.json(); } catch(e) {",
+            "    pm.expect.fail('Respuesta no es JSON: ' + pm.response.text());",
+            "    return;",
+            "}",
+            "pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+            "pm.test(\"Mensaje 'Error de validacion'\", () => pm.expect(json.error).to.eql('Error de validacion'));",
+            "pm.test(\"Tiene 'detalles'\", () => pm.expect(json).to.have.property('detalles'));"
+          ],
+          "type": "text/javascript"
+        }
+      }],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cliente\": \"\",\n  \"productoId\": null,\n  \"cantidad\": -1,\n  \"precioUnitario\": -50.00\n}"
+        },
+        "url": "http://localhost:8081/api/pedidos/procesar"
+      }
+    },
+    {
+      "name": "07 - Pedido inexistente devuelve 404",
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "pm.test(\"Status 404\", () => pm.response.to.have.status(404));",
+            "var json;",
+            "try { json = pm.response.json(); } catch(e) {",
+            "    pm.expect.fail('Respuesta no es JSON: ' + pm.response.text());",
+            "    return;",
+            "}",
+            "pm.test(\"Tiene campo error\", () => pm.expect(json).to.have.property('error'));"
+          ],
+          "type": "text/javascript"
+        }
+      }],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "http://localhost:8081/api/pedidos/99999"
+      }
+    },
+    {
+      "name": "08 - Listar pedidos incluye el creado",
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "var json;",
+            "try { json = pm.response.json(); } catch(e) {",
+            "    pm.expect.fail('Respuesta no es JSON: ' + pm.response.text());",
+            "    return;",
+            "}",
+            "var pId = parseInt(pm.collectionVariables.get('pedidoId'));",
+            "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+            "pm.test(\"Es array\", () => pm.expect(json).to.be.an('array'));",
+            "var encontrado = json.find(function(p) { return p.id === pId; });",
+            "pm.test(\"Pedido de saga esta en lista\", () => pm.expect(encontrado).to.not.be.undefined);",
+            "if (encontrado) {",
+            "    pm.test(\"Cliente coincide\", () => pm.expect(encontrado.cliente).to.eql('Cliente Integracion'));",
+            "    pm.test(\"Estado CANCELADO\", () => pm.expect(encontrado.estado).to.eql('CANCELADO'));",
+            "}"
+          ],
+          "type": "text/javascript"
+        }
+      }],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "http://localhost:8081/api/pedidos"
+      }
+    },
+    {
+      "name": "09 - Obtener pedido por ID con todos los campos",
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "var json;",
+            "try { json = pm.response.json(); } catch(e) {",
+            "    pm.expect.fail('Respuesta no es JSON: ' + pm.response.text());",
+            "    return;",
+            "}",
+            "var pId = parseInt(pm.collectionVariables.get('pedidoId'));",
+            "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+            "pm.test(\"Todos los campos\", () => {",
+            "    ['id','cliente','productoId','cantidad','precioUnitario','descuento','subtotal','total','estado','fechaCreacion'].forEach(function(k) {",
+            "        pm.expect(json).to.have.property(k);",
+            "    });",
+            "});",
+            "pm.test(\"ID y estado\", () => {",
+            "    pm.expect(json.id).to.eql(pId);",
+            "    pm.expect(json.estado).to.eql('CANCELADO');",
+            "});",
+            "pm.test(\"subtotal > 0\", () => pm.expect(parseFloat(json.subtotal)).to.be.above(0));",
+            "pm.test(\"total > 0\", () => pm.expect(parseFloat(json.total)).to.be.above(0));"
+          ],
+          "type": "text/javascript"
+        }
+      }],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "http://localhost:8081/api/pedidos/{{pedidoId}}"
+      }
+    },
+    {
+      "name": "10 - Factura existe en facturacion-service",
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "var json;",
+            "try { json = pm.response.json(); } catch(e) {",
+            "    pm.expect.fail('Respuesta no es JSON: ' + pm.response.text());",
+            "    return;",
+            "}",
+            "var pId = parseInt(pm.collectionVariables.get('pedidoId'));",
+            "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+            "pm.test(\"Campos requeridos\", () => {",
+            "    ['id','numeroFactura','pedidoId','cliente','monto','fechaEmision'].forEach(function(k) {",
+            "        pm.expect(json).to.have.property(k);",
+            "    });",
+            "});",
+            "pm.test(\"pedidoId coincide\", () => pm.expect(json.pedidoId).to.eql(pId));",
+            "pm.test(\"cliente coincide\", () => pm.expect(json.cliente).to.eql('Cliente Integracion'));",
+            "pm.test(\"monto > 0\", () => pm.expect(json.monto).to.be.above(0));"
+          ],
+          "type": "text/javascript"
+        }
+      }],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "http://localhost:8083/api/facturas/{{facturaId}}"
+      }
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+target/
+*.jar
+*.log
+.git
+.gitignore
+README.md
+.env
+.env.example
+node_modules/
+Dockerfile
+.dockerignore
