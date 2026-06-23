@@ -1,0 +1,93 @@
+version: '3.8'
+
+services:
+  # NODO PRINCIPAL (PRIMARY) - LIMA
+  postgres-lima:
+    image: postgres:14
+    container_name: fedex_db_lima
+    environment:
+      POSTGRES_USER: fedex_user
+      POSTGRES_PASSWORD: fedex_pass
+      POSTGRES_DB: fedex_lima
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - fedex_network
+    restart: unless-stopped
+    # ESTO ES LO NUEVO: Verifica que Postgres esté listo
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fedex_user -d fedex_lima"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # RÉPLICAS SECUNDARIAS
+  postgres-bogota:
+    image: postgres:14
+    container_name: fedex_db_bogota
+    environment:
+      POSTGRES_USER: fedex_user
+      POSTGRES_PASSWORD: fedex_pass
+      POSTGRES_DB: fedex_bogota
+    ports:
+      - "5434:5432"
+    volumes:
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - fedex_network
+    restart: unless-stopped
+
+  postgres-santiago:
+    image: postgres:14
+    container_name: fedex_db_santiago
+    environment:
+      POSTGRES_USER: fedex_user
+      POSTGRES_PASSWORD: fedex_pass
+      POSTGRES_DB: fedex_santiago
+    ports:
+      - "5435:5432"
+    volumes:
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - fedex_network
+    restart: unless-stopped
+
+  postgres-mexico:
+    image: postgres:14
+    container_name: fedex_db_mexico
+    environment:
+      POSTGRES_USER: fedex_user
+      POSTGRES_PASSWORD: fedex_pass
+      POSTGRES_DB: fedex_mexico
+    ports:
+      - "5436:5432"
+    volumes:
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - fedex_network
+    restart: unless-stopped
+
+  # ==========================================
+  # BACKEND API (FastAPI)
+  # ==========================================
+  backend:
+    build: 
+      context: ./backend
+    container_name: fedex_backend_api
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+psycopg2://fedex_user:fedex_pass@postgres-lima:5432/fedex_lima
+    depends_on:
+      # ESTO ES LO NUEVO: Espera a que Lima pase el healthcheck
+      postgres-lima:
+        condition: service_healthy
+    networks:
+      - fedex_network
+    restart: always
+
+networks:
+  fedex_network:
+    driver: bridge
