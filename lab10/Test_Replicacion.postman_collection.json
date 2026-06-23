@@ -1,0 +1,1127 @@
+{
+	"info": {
+		"_postman_id": "fedex-replicacion",
+		"name": "FedEx_Replicacion",
+		"description": "# Lab 10 - Replicación de Datos FedEx Perú\n\nColección para probar el flujo completo de:\n1. **Registro** de datos en el nodo principal (Lima)\n2. **Replicación** a nodos secundarios\n3. **Caída** del nodo principal\n4. **Failover** a Bogotá (réplica prioritaria)\n5. **Recuperación** del nodo principal\n\n## Variables\n- `BASE_URL`: URL del backend API (por defecto `http://localhost:8000`)\n\n## Requisitos previos\n- Docker Desktop corriendo\n- Ejecutar: `docker-compose up -d`\n- Ejecutar seed: `docker exec -i fedex_db_lima psql -U fedex_user -d fedex_lima < database/seed.sql`",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "BASE_URL",
+			"value": "http://localhost:8000",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "1. Verificacion del del backend y la base de datos principal",
+			"description": "Verificar que están operativos antes de comenzar las pruebas.",
+			"item": [
+				{
+					"name": "Verificar Estado de la API",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('El servicio responde correctamente', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('La información del servicio es válida', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.status).to.eql('OK');",
+									"    pm.expect(jsonData.servicio).to.eql('backend-fedex');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/health",
+							"host": ["{{BASE_URL}}"],
+							"path": ["health"]
+						},
+						"description": "Verifica que el backend FastAPI está corriendo y conectado a PostgreSQL Lima."
+					}
+				},
+				{
+					"name": "Consultando la Informacion General ",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('API responde correctamente', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Tiene los 5 módulos', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.modulos).to.have.lengthOf(5);",
+									"    pm.expect(jsonData.modulos).to.include.members([",
+									"        'inventarios', 'pedidos', 'temperaturas', 'envios', 'vehiculos'",
+									"    ]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/",
+							"host": ["{{BASE_URL}}"],
+							"path": [""]
+						},
+						"description": "Obtiene información general del API y los módulos disponibles."
+					}
+				},
+				{
+					"name": "Consultar sobre los Inventarios Existentes (Seed)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Respuesta exitosa', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Existen inventarios del seed', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.total).to.be.above(0);",
+									"    console.log('Inventarios cargados en Lima: ' + jsonData.total);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/inventarios/",
+							"host": ["{{BASE_URL}}"],
+							"path": ["inventarios", ""]
+						},
+						"description": "Verifica que los datos del seed.sql se cargaron correctamente en Lima."
+					}
+				}
+			]
+		},
+		{
+			"name": "2. Registro de Datos en  el nodo Primary",
+			"item": [
+				{
+					"name": "Inventario",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Inventario creado (201)', function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test('Datos registrados correctamente', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.mensaje).to.include('registrado');",
+									"    pm.expect(jsonData.data.producto).to.eql('Espárragos Frescos');",
+									"    pm.expect(jsonData.data.cantidad).to.eql(320);",
+									"    pm.expect(jsonData.data.sede).to.eql('Lima');",
+									"",
+									"    pm.collectionVariables.set('inventario_id', jsonData.data.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"producto\": \"Espárragos Frescos\",\n    \"cantidad\": 320,\n    \"sede\": \"Lima\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/inventarios/",
+							"host": ["{{BASE_URL}}"],
+							"path": ["inventarios", ""]
+						},
+						"description": "Registra un nuevo producto en el inventario del nodo Lima."
+					}
+				},
+				{
+					"name": "Pedido",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Pedido creado (201)', function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test('Pedido registrado correctamente', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.mensaje).to.include('registrado');",
+									"    pm.expect(jsonData.data.cliente).to.eql('Distribuidora El Pacífico');",
+									"    pm.expect(jsonData.data.producto).to.eql('Espárragos Frescos');",
+									"",
+									"    pm.collectionVariables.set('pedido_id', jsonData.data.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"cliente\": \"Distribuidora El Pacífico\",\n    \"producto\": \"Espárragos Frescos\",\n    \"cantidad\": 80,\n    \"sede\": \"Lima\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/pedidos/",
+							"host": ["{{BASE_URL}}"],
+							"path": ["pedidos", ""]
+						},
+						"description": "Registra un nuevo pedido asociado al inventario creado."
+					}
+				},
+				{
+					"name": "Temperatura",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Temperatura registrada (201)', function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test('Alerta generada correctamente', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.temperatura).to.eql(11.8);",
+									"    pm.expect(jsonData.data.alerta).to.include('ALERTA');",
+									"    console.log('Alerta generada: ' + jsonData.data.alerta);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"almacen\": \"Bodega Frigorífica Norte - Ventanilla\",\n    \"temperatura\": 11.8,\n    \"sede\": \"Lima\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/temperaturas/",
+							"host": ["{{BASE_URL}}"],
+							"path": ["temperaturas", ""]
+						},
+						"description": "Registra una temperatura alta (>8°C) para verificar que se genera la alerta automática."
+					}
+				},
+				{
+					"name": "Temperatura Normal",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Temperatura registrada (201)', function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test('Sin alerta - temperatura normal', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.temperatura).to.eql(3.5);",
+									"    pm.expect(jsonData.data.alerta).to.eql('Temperatura normal');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"almacen\": \"Cámara Frigorífica C1 - Lurín\",\n    \"temperatura\": 3.5,\n    \"sede\": \"Lima\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/temperaturas/",
+							"host": ["{{BASE_URL}}"],
+							"path": ["temperaturas", ""]
+						},
+						"description": "Registra una temperatura dentro del rango normal (0-8°C)."
+					}
+				},
+				{
+					"name": "Registrar Envío",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Envío registrado (201)', function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test('Estado del envío es correcto', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.estado).to.eql('EN_TRANSITO');",
+									"    pm.expect(jsonData.data.ubicacion).to.eql('Av. Néstor Gambetta Km 8 - Callao');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"pedido_id\": 1,\n    \"estado\": \"EN_TRANSITO\",\n    \"ubicacion\": \"Av. Néstor Gambetta Km 8 - Callao\",\n    \"sede\": \"Lima\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/envios/",
+							"host": ["{{BASE_URL}}"],
+							"path": ["envios", ""]
+						},
+						"description": "Registra un nuevo estado de envío para el pedido 1."
+					}
+				},
+				{
+					"name": "Registrar  del Envío - Estado Inválido",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Error 400 por estado inválido', function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test('Mensaje indica estados permitidos', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.detail).to.include('Estados permitidos');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"pedido_id\": 1,\n    \"estado\": \"EXTRAVIADO\",\n    \"ubicacion\": \"Desconocida\",\n    \"sede\": \"Lima\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/envios/",
+							"host": ["{{BASE_URL}}"],
+							"path": ["envios", ""]
+						},
+						"description": "Intenta registrar un envío con un estado no válido. Debe devolver error 400."
+					}
+				},
+				{
+					"name": "2.7 Registrar Vehículo",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Vehículo registrado (201)', function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test('Datos GPS correctos', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data.placa).to.eql('FDX-415');",
+									"    pm.expect(jsonData.data.latitud).to.be.a('number');",
+									"    pm.expect(jsonData.data.longitud).to.be.a('number');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"placa\": \"FDX-415\",\n    \"latitud\": -12.104792,\n    \"longitud\": -77.030136,\n    \"sede\": \"Lima\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/vehiculos/",
+							"host": ["{{BASE_URL}}"],
+							"path": ["vehiculos", ""]
+						},
+						"description": "Registra la ubicación GPS de un nuevo vehículo de la flota."
+					}
+				}
+			]
+		},
+		{
+			"name": "3. Consultar Datos en Lima (Pre-Replicación)",
+			"description": "Verificar todos los datos almacenados en el nodo principal (Lima) antes de ejecutar la sincronización.\n\n**Después de ejecutar estas consultas, correr el script de sincronización:**\n```\npython scripts/sync-local.py\n```",
+			"item": [
+				{
+					"name": "3.1 Listar Inventarios - Lima",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Respuesta exitosa', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Inventarios contienen datos nuevos y seed', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.total).to.be.above(0);",
+									"    console.log('Total inventarios en Lima: ' + jsonData.total);",
+									"",
+									"    pm.collectionVariables.set('lima_inventarios_total', jsonData.total);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/inventarios/",
+							"host": ["{{BASE_URL}}"],
+							"path": ["inventarios", ""]
+						}
+					}
+				},
+				{
+					"name": "3.2 Listar Pedidos - Lima",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Respuesta exitosa', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Pedidos existen en Lima', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.total).to.be.above(0);",
+									"    console.log('Total pedidos en Lima: ' + jsonData.total);",
+									"    pm.collectionVariables.set('lima_pedidos_total', jsonData.total);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/pedidos/",
+							"host": ["{{BASE_URL}}"],
+							"path": ["pedidos", ""]
+						}
+					}
+				},
+				{
+					"name": "3.3 Listar Temperaturas - Lima",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Respuesta exitosa', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Temperaturas registradas', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.total).to.be.above(0);",
+									"    console.log('Total temperaturas en Lima: ' + jsonData.total);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/temperaturas/",
+							"host": ["{{BASE_URL}}"],
+							"path": ["temperaturas", ""]
+						}
+					}
+				},
+				{
+					"name": "3.4 Listar Envíos - Lima",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Respuesta exitosa', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Envíos registrados', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.total).to.be.above(0);",
+									"    console.log('Total envíos en Lima: ' + jsonData.total);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/envios/",
+							"host": ["{{BASE_URL}}"],
+							"path": ["envios", ""]
+						}
+					}
+				},
+				{
+					"name": "3.5 Listar Vehículos - Lima",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Respuesta exitosa', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Vehículos registrados', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.total).to.be.above(0);",
+									"    console.log('Total vehículos en Lima: ' + jsonData.total);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/vehiculos/",
+							"host": ["{{BASE_URL}}"],
+							"path": ["vehiculos", ""]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "4. Simular Caída de Lima",
+			"item": [
+				{
+					"name": "Health Check - Lima Caída (Debe Fallar)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response) {",
+									"    pm.test('Backend detecta fallo en Lima (500 o error de conexión)', function () {",
+									"        pm.expect(pm.response.code).to.be.oneOf([500, 502, 503]);",
+									"    });",
+									"} else {",
+									"    pm.test('Backend no responde - Lima está caída (esperado)', function () {",
+									"        pm.expect(true).to.be.true;",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/health",
+							"host": ["{{BASE_URL}}"],
+							"path": ["health"]
+						},
+						"description": "Intenta conectarse al backend mientras Lima está caída. Se espera un error que confirme la caída."
+					}
+				},
+				{
+					"name": "4.2 Intentar Registrar en Lima Caída (Debe Fallar)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response) {",
+									"    pm.test('No se puede escribir con Lima caída (error esperado)', function () {",
+									"        pm.expect(pm.response.code).to.be.oneOf([500, 502, 503]);",
+									"    });",
+									"    console.log('Error esperado: El nodo principal no está disponible');",
+									"} else {",
+									"    pm.test('Conexión rechazada - Lima caída (esperado)', function () {",
+									"        pm.expect(true).to.be.true;",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"producto\": \"Arándanos Congelados\",\n    \"cantidad\": 150,\n    \"sede\": \"Lima\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/inventarios/",
+							"host": ["{{BASE_URL}}"],
+							"path": ["inventarios", ""]
+						},
+						"description": "Intenta registrar un inventario mientras Lima está caída. Debe fallar, demostrando que el nodo principal es necesario para escrituras."
+					}
+				},
+				{
+					"name": "4.3 Intentar Consultar con Lima Caída (Debe Fallar)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response) {",
+									"    pm.test('No se puede leer con Lima caída (error esperado)', function () {",
+									"        pm.expect(pm.response.code).to.be.oneOf([500, 502, 503]);",
+									"    });",
+									"    console.log('Error esperado: Esto justifica la necesidad del failover a Bogotá');",
+									"} else {",
+									"    pm.test('Conexión rechazada - necesitamos failover (esperado)', function () {",
+									"        pm.expect(true).to.be.true;",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/pedidos/",
+							"host": ["{{BASE_URL}}"],
+							"path": ["pedidos", ""]
+						},
+						"description": "Demuestra que sin el nodo principal, tampoco se pueden consultar datos. Justifica la necesidad de failover."
+					}
+				}
+			]
+		},
+		{
+			"name": "5. Failover a Bogotá (Réplica Prioritaria)",
+			"item": [
+				{
+					"name": "5.1 Health Check - Bogotá como Primary",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Backend operativo con Bogotá', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Servicio activo después del failover', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.status).to.eql('OK');",
+									"    console.log('FAILOVER EXITOSO: Backend conectado a Bogotá');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/health",
+							"host": ["{{BASE_URL}}"],
+							"path": ["health"]
+						},
+						"description": "Verifica que el backend está operativo usando Bogotá como nodo principal."
+					}
+				},
+				{
+					"name": "5.2 Consultar Inventarios - Bogotá",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Respuesta exitosa desde Bogotá', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Bogotá tiene los datos replicados', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.total).to.be.above(0);",
+									"    console.log('Inventarios en Bogotá: ' + jsonData.total);",
+									"",
+									"    var limaTotal = pm.collectionVariables.get('lima_inventarios_total');",
+									"    if (limaTotal) {",
+									"        pm.expect(jsonData.total).to.eql(parseInt(limaTotal));",
+									"        console.log('REPLICACIÓN VERIFICADA: Bogotá tiene los mismos ' + limaTotal + ' registros que Lima');",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/inventarios/",
+							"host": ["{{BASE_URL}}"],
+							"path": ["inventarios", ""]
+						},
+						"description": "Verifica que los inventarios replicados desde Lima existen en Bogotá."
+					}
+				},
+				{
+					"name": "5.3 Consultar Pedidos - Bogotá",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Respuesta exitosa desde Bogotá', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Pedidos replicados correctamente', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.total).to.be.above(0);",
+									"    console.log('Pedidos en Bogotá: ' + jsonData.total);",
+									"",
+									"    var limaTotal = pm.collectionVariables.get('lima_pedidos_total');",
+									"    if (limaTotal) {",
+									"        pm.expect(jsonData.total).to.eql(parseInt(limaTotal));",
+									"        console.log('DATOS CRÍTICOS INTACTOS: ' + limaTotal + ' pedidos preservados en Bogotá');",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/pedidos/",
+							"host": ["{{BASE_URL}}"],
+							"path": ["pedidos", ""]
+						},
+						"description": "Verifica que los pedidos (datos críticos con replicación síncrona) están intactos en Bogotá."
+					}
+				},
+				{
+					"name": "5.4 Consultar Temperaturas - Bogotá",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Respuesta exitosa desde Bogotá', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Temperaturas disponibles en Bogotá', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.total).to.be.above(0);",
+									"    console.log('Temperaturas en Bogotá: ' + jsonData.total);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/temperaturas/",
+							"host": ["{{BASE_URL}}"],
+							"path": ["temperaturas", ""]
+						}
+					}
+				},
+				{
+					"name": "5.5 Consultar Envíos - Bogotá",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Respuesta exitosa desde Bogotá', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Envíos disponibles en Bogotá', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.total).to.be.above(0);",
+									"    console.log('Envíos en Bogotá: ' + jsonData.total);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/envios/",
+							"host": ["{{BASE_URL}}"],
+							"path": ["envios", ""]
+						}
+					}
+				},
+				{
+					"name": "5.6 Consultar Vehículos - Bogotá",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Respuesta exitosa desde Bogotá', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Vehículos disponibles en Bogotá', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.total).to.be.above(0);",
+									"    console.log('Vehículos en Bogotá: ' + jsonData.total);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/vehiculos/",
+							"host": ["{{BASE_URL}}"],
+							"path": ["vehiculos", ""]
+						}
+					}
+				},
+				{
+					"name": "5.7 Registrar Pedido en Bogotá (Escritura durante failover)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Escritura exitosa en Bogotá (201)', function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test('Bogotá acepta escrituras como nuevo Primary', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.mensaje).to.include('registrado');",
+									"    pm.expect(jsonData.data.cliente).to.eql('Exportadora Andina SAC');",
+									"    console.log('FAILOVER COMPLETO: Bogotá acepta lecturas Y escrituras');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"cliente\": \"Exportadora Andina SAC\",\n    \"producto\": \"Mangos de Exportación\",\n    \"cantidad\": 200,\n    \"sede\": \"Bogota\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/pedidos/",
+							"host": ["{{BASE_URL}}"],
+							"path": ["pedidos", ""]
+						},
+						"description": "Demuestra que Bogotá puede aceptar escrituras mientras Lima está caída, asumiendo el rol de nodo principal."
+					}
+				}
+			]
+		},
+		{
+			"name": "6. Recuperación de Lima",
+			"description": "## ⚠️ PASOS MANUALES REQUERIDOS\n\n### Paso 1: Restaurar Lima\n```bash\ndocker start fedex_db_lima\n```\nO ejecutar:\n```bash\nbash scripts/restaurar-lima.sh\n```\n\n### Paso 2: Reconfigurar backend a Lima\nDetener el backend temporal de Bogotá y volver al original:\n```bash\ndocker stop fedex_backend_api_bogota\ndocker rm fedex_backend_api_bogota\ndocker start fedex_backend_api\n```\n\n### Paso 3: Resincronizar datos\nSi se registraron datos en Bogotá durante el failover, sincronizar de vuelta a Lima.\n\nEstas requests verifican que Lima vuelve a estar operativa.",
+			"item": [
+				{
+					"name": "6.1 Health Check - Lima Restaurada",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Lima está de vuelta (200)', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Backend reconectado a Lima', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.status).to.eql('OK');",
+									"    console.log('RECUPERACIÓN EXITOSA: Lima está operativa nuevamente');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/health",
+							"host": ["{{BASE_URL}}"],
+							"path": ["health"]
+						},
+						"description": "Verifica que el backend está reconectado al nodo principal Lima restaurado."
+					}
+				},
+				{
+					"name": "6.2 Verificar Inventarios - Lima Post-Recuperación",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Respuesta exitosa', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Datos de Lima persisten después de la caída', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.total).to.be.above(0);",
+									"    console.log('Inventarios en Lima post-recuperación: ' + jsonData.total);",
+									"    console.log('DATOS PERSISTENTES: Los volúmenes de Docker preservaron los datos');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/inventarios/",
+							"host": ["{{BASE_URL}}"],
+							"path": ["inventarios", ""]
+						},
+						"description": "Confirma que los datos de Lima no se perdieron durante la caída (persistencia de Docker volumes)."
+					}
+				},
+				{
+					"name": "6.3 Verificar Pedidos - Lima Post-Recuperación",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Respuesta exitosa', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Pedidos intactos post-recuperación', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.total).to.be.above(0);",
+									"    console.log('Pedidos en Lima post-recuperación: ' + jsonData.total);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/pedidos/",
+							"host": ["{{BASE_URL}}"],
+							"path": ["pedidos", ""]
+						}
+					}
+				},
+				{
+					"name": "6.4 Registrar Nuevo Dato Post-Recuperación",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Escritura exitosa post-recuperación (201)', function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test('Lima acepta escrituras nuevamente', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.mensaje).to.include('registrado');",
+									"    console.log('SISTEMA RESTAURADO: Lima acepta lecturas y escrituras normalmente');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"producto\": \"Paltas Hass Premium\",\n    \"cantidad\": 410,\n    \"sede\": \"Lima\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/inventarios/",
+							"host": ["{{BASE_URL}}"],
+							"path": ["inventarios", ""]
+						},
+						"description": "Confirma que Lima puede recibir nuevas escrituras después de la recuperación. El sistema está completamente restaurado."
+					}
+				},
+				{
+					"name": "6.5 Estado Final - Todos los Módulos",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('API completamente operativa', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Todos los módulos disponibles', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.modulos).to.have.lengthOf(5);",
+									"    console.log('========================================');",
+									"    console.log('SIMULACIÓN COMPLETADA EXITOSAMENTE');",
+									"    console.log('- Registro en Lima: OK');",
+									"    console.log('- Replicación a Bogotá: OK');",
+									"    console.log('- Caída de Lima: Detectada');",
+									"    console.log('- Failover a Bogotá: OK');",
+									"    console.log('- Recuperación de Lima: OK');",
+									"    console.log('========================================');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/",
+							"host": ["{{BASE_URL}}"],
+							"path": [""]
+						},
+						"description": "Verificación final: el sistema está completamente restaurado con todos los módulos operativos."
+					}
+				}
+			]
+		}
+	]
+}
