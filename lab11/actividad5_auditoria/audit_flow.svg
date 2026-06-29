@@ -1,0 +1,119 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 600" width="100%" height="100%">
+  <defs>
+    <style>
+      .bg { fill: #0d1117; }
+      .title { font-family: 'Outfit', 'Inter', sans-serif; font-size: 24px; fill: #58a6ff; font-weight: bold; }
+      .subtitle { font-family: 'Inter', sans-serif; font-size: 14px; fill: #8b949e; }
+      .box { rx: 10px; stroke-width: 2px; }
+      .box-service { fill: #161b22; stroke: #bc8cff; }
+      .box-agent { fill: #161b22; stroke: #58a6ff; }
+      .box-center { fill: #161b22; stroke: #ff7b72; }
+      .box-storage { fill: #161b22; stroke: #3fb950; }
+      .text-node { font-family: 'Inter', sans-serif; font-size: 14px; fill: #c9d1d9; font-weight: 600; text-anchor: middle; }
+      .text-role { font-family: 'Inter', sans-serif; font-size: 11px; fill: #8b949e; text-anchor: middle; }
+      .line { stroke: #30363d; stroke-width: 2px; }
+      .arrow { stroke: #58a6ff; stroke-width: 2px; fill: none; marker-end: url(#arrowhead); }
+      .arrow-alert { stroke: #ff7b72; stroke-width: 2px; fill: none; marker-end: url(#arrowhead-alert); }
+      .arrow-text { font-family: 'Inter', sans-serif; font-size: 11px; fill: #8b949e; text-anchor: middle; }
+      .data-flow { stroke: #3fb950; stroke-width: 2px; fill: none; stroke-dasharray: 4 4; }
+      .legend-title { font-family: 'Inter', sans-serif; font-weight: bold; font-size: 12px; fill: #c9d1d9; }
+      .legend-text { font-family: 'Inter', sans-serif; font-size: 11px; fill: #8b949e; }
+    </style>
+    <marker id="arrowhead" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#58a6ff" />
+    </marker>
+    <marker id="arrowhead-alert" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#ff7b72" />
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1000" height="600" class="bg" />
+
+  <!-- Headers -->
+  <text x="50" y="50" class="title">LogiMarket Perú — Pipeline de Auditoría y Logs Centralizados</text>
+  <text x="50" y="75" class="subtitle">Taxonomía estructurada, alertas automáticas y políticas de retención para trazabilidad (Incidente 4)</text>
+
+  <!-- Fuente de Eventos (Microservicios) -->
+  <g transform="translate(50, 150)">
+    <rect width="180" height="300" fill="#161b22" stroke="#30363d" rx="8" />
+    <text x="90" y="25" class="text-node">Fuentes de Eventos</text>
+    
+    <!-- Microservicio Auth -->
+    <rect x="15" y="45" width="150" height="60" class="box box-service" />
+    <text x="90" y="72" class="text-node" font-size="12">MS Autenticación</text>
+    <text x="90" y="90" class="text-role">Login success/fails</text>
+
+    <!-- Microservicio Inventario -->
+    <rect x="15" y="125" width="150" height="60" class="box box-service" />
+    <text x="90" y="152" class="text-node" font-size="12">MS Inventario</text>
+    <text x="90" y="170" class="text-role">Modificaciones stock</text>
+
+    <!-- Microservicio Pagos -->
+    <rect x="15" y="205" width="150" height="60" class="box box-service" />
+    <text x="90" y="232" class="text-node" font-size="12">MS Pagos</text>
+    <text x="90" y="250" class="text-role">Transacciones</text>
+  </g>
+
+  <!-- Conector y Recolector Local -->
+  <g transform="translate(300, 240)">
+    <rect width="180" height="120" class="box box-agent" />
+    <text x="90" y="45" class="text-node">Agente de Envío</text>
+    <text x="90" y="65" class="text-role">Filebeat / FluentBit</text>
+    <text x="90" y="90" class="text-role" fill="#58a6ff">Logs locales JSON</text>
+  </g>
+
+  <!-- Flechas Fuentes -> Recolector -->
+  <path d="M 230 220 L 265 220 L 265 300 L 298 300" class="arrow" />
+  <path d="M 230 300 L 298 300" class="arrow" />
+  <path d="M 230 380 L 265 380 L 265 300 L 298 300" class="arrow" />
+
+  <!-- Motor Centralizador y Alertas -->
+  <g transform="translate(560, 210)">
+    <rect width="180" height="180" class="box box-center" />
+    <text x="90" y="35" class="text-node">Servidor de Logs</text>
+    <text x="90" y="55" class="text-role">Elasticsearch / Graylog</text>
+    
+    <rect x="15" y="85" width="150" height="40" fill="#21262d" stroke="#ff7b72" rx="4" />
+    <text x="90" y="105" class="text-node" font-size="11" fill="#ff7b72">Motor de Alertas</text>
+    <text x="90" y="117" class="text-role">Reglas en tiempo real</text>
+  </g>
+
+  <path d="M 480 300 L 558 300" class="arrow" />
+  <text x="519" y="290" class="arrow-text">Encolado (HTTPS)</text>
+
+  <!-- Destinos: Storage y Alerta SIEM -->
+  <!-- Alerta Canal de Seguridad -->
+  <g transform="translate(800, 180)">
+    <rect width="160" height="80" fill="#21262d" stroke="#ff7b72" rx="8" />
+    <text x="80" y="35" class="text-node" fill="#ff7b72">Canal SOC / Admin</text>
+    <text x="80" y="55" class="text-role">Alertas CRITICAS</text>
+    <text x="80" y="68" class="text-role">Slack, Correo, PagerDuty</text>
+  </g>
+
+  <!-- Storage Central con Políticas de Retención -->
+  <g transform="translate(800, 310)">
+    <rect width="160" height="150" class="box box-storage" />
+    <text x="80" y="30" class="text-node">Almacenamiento</text>
+    <text x="80" y="55" class="text-role" fill="#3fb950">Hot / Warm / Cold</text>
+    
+    <line x1="10" y1="70" x2="150" y2="70" stroke="#30363d" />
+    
+    <text x="15" y="90" font-family="Inter" font-size="10" fill="#c9d1d9">INFO: 30 dias (Hot)</text>
+    <text x="15" y="110" font-family="Inter" font-size="10" fill="#c9d1d9">WARN: 90 dias (Warm)</text>
+    <text x="15" y="130" font-family="Inter" font-size="10" fill="#c9d1d9">CRIT: 365 dias (Cold - Inmutable)</text>
+  </g>
+
+  <!-- Flechas Centralizador -> Destinos -->
+  <path d="M 740 260 L 770 260 L 770 220 L 798 220" class="arrow-alert" />
+  <path d="M 740 320 L 770 320 L 770 380 L 798 380" class="arrow" />
+
+  <!-- Leyenda de Taxonomía JSON en la parte inferior -->
+  <g transform="translate(50, 480)">
+    <rect width="700" height="90" fill="#161b22" stroke="#30363d" rx="6" />
+    <text x="15" y="22" class="legend-title">Campos Requeridos de la Taxonomía LogiMarket (Formato JSON estructurado):</text>
+    <text x="15" y="42" class="legend-text">{@timestamp, service_name, severity [INFO|WARNING|CRITICAL], event_id, actor_id, action, status [SUCCESS|FAIL], ip_address, details}</text>
+    <text x="15" y="62" class="legend-text">Mitigación Incidente 4: Todas las transacciones de modificación de stock en Inventario generan logs CRITICAL auditados y firmados.</text>
+  </g>
+
+</svg>
